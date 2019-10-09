@@ -1,0 +1,68 @@
+series, name, thread_count, size, loops, porp_time, normal_time
+1565704363, closest_pair, 4, 64, 4, 0.1347, 0.029
+1565704363, closest_pair, 4, 128, 4, 0.3024, 0.0962
+1565704363, closest_pair, 4, 256, 4, 0.6973, 0.3272
+1565704363, closest_pair, 4, 512, 4, 1.8878, 1.2536
+1565704363, closest_pair, 4, 1024, 4, 5.8246, 4.8334
+1565704546, closest_pair, 4, 64, 4, 0.1382, 0.0335
+1565704546, closest_pair, 4, 128, 4, 0.3057, 0.0959
+1565704546, closest_pair, 4, 256, 4, 0.7112, 0.3285
+1565704546, closest_pair, 4, 512, 4, 1.8854, 1.2432
+1565704546, closest_pair, 4, 1024, 4, 5.8825, 4.9155
+1565704625, closest_pair, 4, 1024, 4, 5.8253, 4.8609
+1565704625, closest_pair, 4, 2048, 4, 20.1651, 19.7204
+1565704625, closest_pair, 4, 4096, 4, 74.8264, 79.4241
+1565704888, closest_pair, 4, 64, 4, 0.0423, 0.0374
+1565704888, closest_pair, 4, 128, 4, 0.0566, 0.1092
+1565704888, closest_pair, 4, 256, 4, 0.1223, 0.3694
+1565704888, closest_pair, 4, 512, 4, 0.4039, 1.4144
+1565704888, closest_pair, 4, 1024, 4, 1.5495, 5.2275
+1565704888, closest_pair, 4, 2048, 4, 5.5561, 20.0999
+1565704888, closest_pair, 4, 4096, 4, 16.8621, 60.6994
+1565705808, closest_pair, 4, 64, 4, 0.0193, 0.0006
+1565705808, closest_pair, 4, 128, 4, 0.0186, 0.0012
+1565705808, closest_pair, 4, 256, 4, 0.0171, 0.0023
+1565705808, closest_pair, 4, 512, 4, 0.0178, 0.0047
+1565705808, closest_pair, 4, 1024, 4, 0.019, 0.0097
+1565705808, closest_pair, 4, 2048, 4, 0.022, 0.0196
+1565705808, closest_pair, 4, 4096, 4, 0.0273, 0.0395
+1565705826, closest_pair, 4, 64, 4, 0.0194, 0.0007
+1565705826, closest_pair, 4, 256, 4, 0.0184, 0.0024
+1565705826, closest_pair, 4, 1024, 4, 0.0191, 0.0098
+1565705826, closest_pair, 4, 4096, 4, 0.0267, 0.0399
+1565705826, closest_pair, 4, 16384, 4, 0.0591, 0.1619
+1565705826, closest_pair, 4, 65536, 4, 0.2054, 0.647
+1565705826, closest_pair, 4, 262144, 4, 0.9068, 2.7762
+1565705826, closest_pair, 4, 1048576, 4, 3.6584, 11.4013
+1565710279, edge_detection, 4, edge_detection/data/spider_web_sqr.jpg, 1, 50.3282, 0.0
+1565710899, closest_pair, 64, 64, 10, 0.1868, 0.0621
+1565710899, closest_pair, 64, 128, 10, 0.2508, 0.2406
+1565710899, closest_pair, 64, 256, 10, 0.254, 0.6963
+1565710909, closest_pair, 64, 64, 10, 0.1869, 0.0636
+1565710909, closest_pair, 64, 128, 10, 0.2408, 0.1864
+1565710909, closest_pair, 64, 256, 10, 0.251, 0.6837
+1565710909, closest_pair, 64, 512, 10, 0.3247, 2.6192
+1565710940, closest_pair, 64, 64, 10, 0.1893, 0.0623
+1565710940, closest_pair, 64, 128, 10, 0.2488, 0.2062
+1565710940, closest_pair, 64, 256, 10, 0.2566, 0.6928
+1565710940, closest_pair, 64, 512, 10, 0.3302, 2.6286
+1565710940, closest_pair, 64, 1024, 10, 0.6515, 10.2428
+1565710940, closest_pair, 64, 2048, 10, 1.8591, 41.1825
+1565710940, closest_pair, 64, 4096, 10, 6.7965, 165.0936
+1565710940, max sub array, 64, 64, 10, 0.2099, 0.0012
+1565710940, max sub array, 64, 256, 10, 0.2124, 0.0058
+1565710940, max sub array, 64, 1024, 10, 0.2118, 0.0201
+1565710940, max sub array, 64, 4096, 10, 0.2063, 0.0795
+1565710940, max sub array, 64, 16384, 10, 0.2119, 0.337
+1565710940, max sub array, 64, 65536, 10, 0.2868, 1.3848
+1565710940, max sub array, 64, 262144, 10, 0.6851, 5.7312
+1565710940, max sub array, 64, 1048576, 10, 2.4022, 24.0901
+1565710940, edge_detection, 64, edge_detection/data/spider_web_sqr.jpg, 10, 195.9353, 852.8202
+1565718296, edge_detection, 64, edge_detection/data/spider_web_sqr.jpg, 10, 196.0714, 844.163
+1565743771, edge_detection, 64, edge_detection/data/lena.jpg, 10, 9.3282, 29.2234
+1565743771, edge_detection, 64, edge_detection/data/hdr_sqr.jpg, 10, 32.1133, 158.5659
+1565743771, edge_detection, 64, edge_detection/data/flower_foveon_sqr.jpg, 10, 54.6926, 240.0827
+1565743771, edge_detection, 64, edge_detection/data/leaves_iso_200_sqr.jpg, 10, 35.3219, 152.8768
+1565743771, edge_detection, 64, edge_detection/data/nightshot_iso_1600_sqr.jpg, 10, 41.2295, 209.3774
+1565743771, edge_detection, 64, edge_detection/data/zone_plate_sqr.jpg, 10, 35.1133, 151.0973
+1565743771, edge_detection, 64, edge_detection/data/spider_web_sqr.jpg, 10, 196.063, 849.9732

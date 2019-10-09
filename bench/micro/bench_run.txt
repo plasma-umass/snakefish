@@ -1,0 +1,2 @@
+1565704016
+Running  sum with  64 threads on  10 loops.

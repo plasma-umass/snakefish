@@ -9,7 +9,7 @@ namespace py = pybind11;
 
 namespace snakefish {
 
-class thread {
+class __attribute__ ((visibility("hidden"))) thread {
 public:
   /*
    * No default constructor.

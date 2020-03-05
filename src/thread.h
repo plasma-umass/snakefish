@@ -2,6 +2,7 @@
 #define SNAKEFISH_THREAD_H
 
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include <pybind11/pybind11.h>
 namespace py = pybind11;

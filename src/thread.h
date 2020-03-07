@@ -17,6 +17,26 @@ public:
   thread() = delete;
 
   /*
+   * No copy constructor.
+   */
+  thread(const thread& t) = delete;
+
+  /*
+   * No copy assignment operator.
+   */
+  thread& operator=(const thread& t) = delete;
+
+  /*
+   * No move constructor.
+   */
+  thread(thread&& t) = delete;
+
+  /*
+   * No move assignment operator.
+   */
+  thread& operator=(thread&& t) = delete;
+
+  /*
    * Create a new snakefish thread.
    *
    * \param f The Python function this thread will execute.

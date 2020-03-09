@@ -3,3 +3,4 @@ cmake-*
 .idea/
 __pycache__/
 include/pybind11/
+googletest/

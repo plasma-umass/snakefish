@@ -1,4 +1,4 @@
-.PHONY: snakefish pybind11 pip gtest
+.PHONY: snakefish pybind11 pip dev_dependency
 
 snakefish: pybind11 pybind11 pip
 	$(MAKE) -C src
@@ -20,5 +20,8 @@ pip:
 	pip3 install --user numexpr
 	pip3 install --user OpenCV-python
 
-gtest:
+# dependencies to build tests
+dev_dependency:
+	@rm -rf pybind11 googletest
+	@git clone --recursive 'https://github.com/pybind/pybind11.git'
 	@git clone --recursive 'https://github.com/google/googletest.git'

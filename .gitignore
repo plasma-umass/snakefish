@@ -4,3 +4,4 @@ cmake-*
 __pycache__/
 include/pybind11/
 googletest/
+pybind11/

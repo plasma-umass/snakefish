@@ -35,15 +35,15 @@ set_target_properties(snakefish PROPERTIES PREFIX "c")
 set_target_properties(snakefish PROPERTIES SUFFIX ${LIB_SUFFIX}) # switch to Python3_SOABI when cmake 3.17 is available
 
 # test
-find_package(pybind11 REQUIRED)
+add_subdirectory(pybind11)
 add_subdirectory(googletest)
 
 add_executable(test
         src/tests/main.cpp)
 
 target_include_directories(test PRIVATE
-        include
         src
+        pybind11/include
         googletest/googletest/include
         ${Python3_INCLUDE_DIRS})
 

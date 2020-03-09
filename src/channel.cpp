@@ -95,7 +95,10 @@ py::object receiver::receive_pyobj() {
   char *bytes = reinterpret_cast<char *>(receive_bytes(size));
   py::handle mem_view =
       py::handle(PyMemoryView_FromMemory(bytes, size, PyBUF_READ));
-  return loads(mem_view);
+  py::object obj = loads(mem_view);
+  free(bytes);
+
+  return obj;
 }
 
 void receiver::dispose() {

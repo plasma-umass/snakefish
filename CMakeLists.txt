@@ -11,6 +11,8 @@ execute_process(COMMAND python3-config --extension-suffix
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 add_library(snakefish SHARED
+        src/channel.cpp
+        src/channel.h
         src/snakefish.cpp
         src/snakefish.h
         src/thread.cpp

@@ -11,7 +11,7 @@ OUT := $(shell python3-config --extension-suffix)
 
 .PHONY: snakefish clean
 
-snakefish: snakefish.cpp thread.cpp
+snakefish: snakefish.cpp thread.cpp channel.cpp
 	g++ $(FLAGS) $(INCLUDES) $(PY_INCLUDES) $(LINKER_OPTIONS) $^ -o c$@$(OUT)
 	mv csnakefish.*.so ./snakefish
 

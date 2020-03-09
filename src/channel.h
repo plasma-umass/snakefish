@@ -15,7 +15,8 @@ class receiver; // forward declaration to solve circular dependency
 /*
  * The sending part of an IPC channel.
  *
- * Note that the `send_*()` functions do not protect against concurrent accesses.
+ * Note that the `send_*()` functions do not protect against concurrent
+ * accesses.
  */
 class sender {
 public:

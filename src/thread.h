@@ -1,8 +1,8 @@
 #ifndef SNAKEFISH_THREAD_H
 #define SNAKEFISH_THREAD_H
 
-#include <unistd.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
@@ -21,22 +21,22 @@ public:
   /*
    * No copy constructor.
    */
-  thread(const thread& t) = delete;
+  thread(const thread &t) = delete;
 
   /*
    * No copy assignment operator.
    */
-  thread& operator=(const thread& t) = delete;
+  thread &operator=(const thread &t) = delete;
 
   /*
    * No move constructor.
    */
-  thread(thread&& t) = delete;
+  thread(thread && t) = delete;
 
   /*
    * No move assignment operator.
    */
-  thread& operator=(thread&& t) = delete;
+  thread &operator=(thread &&t) = delete;
 
   /*
    * Create a new snakefish thread.

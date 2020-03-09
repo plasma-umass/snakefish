@@ -53,7 +53,7 @@ void sender::send_pyobj(const py::object &obj) {
 
   // send
   send_bytes(&(buf->len), sizeof(Py_ssize_t)); // output size
-  send_bytes(buf->buf, buf->len); // output
+  send_bytes(buf->buf, buf->len);              // output
 }
 
 void sender::dispose() {
@@ -86,13 +86,15 @@ py::object receiver::receive_pyobj() {
   py::object loads = py::module::import("pickle").attr("loads");
 
   // receive input size
-  Py_ssize_t *size_ptr = reinterpret_cast<Py_ssize_t *>(receive_bytes(sizeof(Py_ssize_t)));
+  Py_ssize_t *size_ptr =
+      reinterpret_cast<Py_ssize_t *>(receive_bytes(sizeof(Py_ssize_t)));
   Py_ssize_t size = *size_ptr;
   free(size_ptr);
 
   // receive input
   char *bytes = reinterpret_cast<char *>(receive_bytes(size));
-  py::handle mem_view = py::handle(PyMemoryView_FromMemory(bytes, size, PyBUF_READ));
+  py::handle mem_view =
+      py::handle(PyMemoryView_FromMemory(bytes, size, PyBUF_READ));
   return loads(mem_view);
 }
 

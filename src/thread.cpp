@@ -2,6 +2,15 @@
 
 namespace snakefish {
 
+thread::~thread() {
+  if (is_parent) {
+    std::get<0>(channel).dispose();
+    std::get<1>(channel).dispose();
+    std::get<2>(channel).dispose();
+    std::get<3>(channel).dispose();
+  }
+}
+
 void thread::start() {
   if (started) {
     throw std::runtime_error("this thread has already been started");
@@ -18,10 +27,7 @@ void thread::start() {
     child_pid = 0;
     started = true;
     alive = true;
-
-    // TODO move this
-    ret_val = func();
-    exit(0);
+    run();
   } else {
     perror("fork() failed");
     throw std::runtime_error("fork() failed");
@@ -46,6 +52,7 @@ void thread::join() {
     abort();
   } else {
     alive = false;
+    ret_val = get_receiver().receive_pyobj();
   }
 }
 
@@ -80,6 +87,39 @@ int thread::get_exit_status() {
   } else {
     return -3;
   }
+}
+
+void thread::run() {
+  if (is_parent) {
+    fprintf(stderr, "run() called by parent!\n");
+    abort();
+  }
+  if (!started) {
+    fprintf(stderr, "run() called but thread hasn't started yet!\n");
+    abort();
+  }
+  if (!alive) {
+    fprintf(stderr, "run() called but thread is no longer alive!\n");
+    abort();
+  }
+
+  ret_val = func();
+  get_sender().send_pyobj(ret_val);
+  exit(0);
+}
+
+sender &thread::get_sender() {
+  if (is_parent)
+    return std::get<0>(channel);
+  else
+    return std::get<2>(channel);
+}
+
+receiver &thread::get_receiver() {
+  if (is_parent)
+    return std::get<1>(channel);
+  else
+    return std::get<3>(channel);
 }
 
 } // namespace snakefish

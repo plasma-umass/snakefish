@@ -7,6 +7,8 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
+#include "channel.h"
+
 namespace snakefish {
 
 class [[gnu::visibility("hidden")]] thread {
@@ -43,7 +45,12 @@ public:
    */
   explicit thread(py::function f)
       : is_parent(false), child_pid(0), started(false), alive(false),
-        child_status(0), func(std::move(f)) {}
+        child_status(0), func(std::move(f)), channel(sync_channel()) {}
+
+  /*
+   * Destructor.
+   */
+  ~thread();
 
   /*
    * Start executing this thread. In other words, start executing the
@@ -86,7 +93,27 @@ public:
    */
   int get_exit_status();
 
+  /*
+   * Get the output of the thread (i.e. the output of the underlying function).
+   */
+  py::object get_result() { return ret_val; }
+
 private:
+  /*
+   * Run the underlying function and return the result to the parent.
+   */
+  void run();
+
+  /*
+   * Convenience function to get the `sender` out of `channel`.
+   */
+  sender &get_sender();
+
+  /*
+   * Convenience function to get the `receiver` out of `channel`.
+   */
+  receiver &get_receiver();
+
   bool is_parent;
   pid_t child_pid;
   bool started;
@@ -94,6 +121,7 @@ private:
   int child_status;
   py::function func;
   py::object ret_val;
+  std::tuple<sender, receiver, sender, receiver> channel;
 };
 
 } // namespace snakefish

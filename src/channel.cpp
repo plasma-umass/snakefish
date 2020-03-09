@@ -57,10 +57,13 @@ void sender::send_pyobj(const py::object &obj) {
 }
 
 void sender::dispose() {
-  if (close(socket_fd)) {
-    perror("close() failed");
-    throw std::runtime_error("close() failed");
-  }
+  // Currently, a sender holds the same socket fd as its
+  // corresponding receiver. As such, it makes sense
+  // for the receiver to close() the socket fd, and the
+  // sender's dispose() should just be a no-op (~sender()
+  // is the default destructor that does nothing).
+  //
+  this->~sender();
 }
 
 void *receiver::receive_bytes(const size_t len) {

@@ -72,7 +72,7 @@ shared_buffer::shared_buffer(const size_t len) : capacity(len) {
   full = static_cast<bool *>(get_shared_mem(sizeof(bool), true));
 
   // initialize metadata
-  new std::atomic_flag(lock);
+  new (lock) std::atomic_flag;
   *ref_cnt = 1;
   *start = 0;
   *end = 0;

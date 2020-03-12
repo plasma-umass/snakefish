@@ -36,7 +36,7 @@ buffer::~buffer() {
     break;
   case MMAP:
     if (munmap(buf, len)) {
-      fprintf(stderr, "munmap() failed!");
+      fprintf(stderr, "munmap() failed!\n");
       abort();
     }
     break;

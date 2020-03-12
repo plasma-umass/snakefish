@@ -10,27 +10,27 @@ namespace snakefish {
 shared_buffer::~shared_buffer() {
   if (ref_cnt->fetch_sub(1) == 1) {
     if (munmap(shared_mem, capacity)) {
-      fprintf(stderr, "munmap() failed!");
+      fprintf(stderr, "munmap() failed!\n");
       abort();
     }
     if (munmap(ref_cnt, sizeof(std::atomic_uint32_t))) {
-      fprintf(stderr, "munmap() failed!");
+      fprintf(stderr, "munmap() failed!\n");
       abort();
     }
     if (munmap(lock, sizeof(std::atomic_flag))) {
-      fprintf(stderr, "munmap() failed!");
+      fprintf(stderr, "munmap() failed!\n");
       abort();
     }
     if (munmap(start, sizeof(size_t))) {
-      fprintf(stderr, "munmap() failed!");
+      fprintf(stderr, "munmap() failed!\n");
       abort();
     }
     if (munmap(end, sizeof(size_t))) {
-      fprintf(stderr, "munmap() failed!");
+      fprintf(stderr, "munmap() failed!\n");
       abort();
     }
     if (munmap(full, sizeof(bool))) {
-      fprintf(stderr, "munmap() failed!");
+      fprintf(stderr, "munmap() failed!\n");
       abort();
     }
   }

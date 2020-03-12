@@ -70,8 +70,10 @@ public:
    * Try to join this thread.
    *
    * This is the non-blocking version of `join()`.
+   *
+   * \returns `true` if joined. `false` otherwise.
    */
-  void try_join();
+  bool try_join();
 
   /*
    * Get the status of the thread.

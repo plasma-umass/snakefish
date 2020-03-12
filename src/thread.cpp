@@ -56,7 +56,7 @@ void thread::join() {
   }
 }
 
-void thread::try_join() {
+bool thread::try_join() {
   if (!started) {
     throw std::runtime_error("this thread has not been started yet");
   }
@@ -66,7 +66,9 @@ void thread::try_join() {
   }
 
   int result = waitpid(child_pid, &child_status, WNOHANG);
-  if (result == -1) {
+  if (result == 0) {
+    return false;
+  } else if (result == -1) {
     perror("waitpid() failed");
     throw std::runtime_error("waitpid() failed");
   } else if (result != child_pid) {
@@ -74,6 +76,8 @@ void thread::try_join() {
     abort();
   } else {
     alive = false;
+    ret_val = get_receiver().receive_pyobj();
+    return true;
   }
 }
 

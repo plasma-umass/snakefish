@@ -1,14 +1,21 @@
 #ifndef SNAKEFISH_CHANNEL_H
 #define SNAKEFISH_CHANNEL_H
 
+#include <atomic>
 #include <tuple>
+#include <utility>
 
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
+#include "buffer.h"
+#include "shared_buffer.h"
+
 namespace snakefish {
 
 static const unsigned PICKLE_PROTOCOL = 4;
+static const size_t MAX_SOCK_MSG_SIZE = 1024;                          // bytes
+static const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
 
 class receiver; // forward declaration to solve circular dependency
 
@@ -29,7 +36,7 @@ public:
    * Default destructor that does nothing.
    *
    * Since a `sender` is used for IPC, any resources held by it should
-   * only be released by the last involved process. That process should
+   * only be released by the last owning process. That process should
    * call the `dispose()` function.
    */
   ~sender() = default;
@@ -63,7 +70,8 @@ public:
    * \returns Two pairs of `(sender, receiver)`. One for each communicating
    * party.
    */
-  friend std::tuple<sender, receiver, sender, receiver> sync_channel();
+  friend std::tuple<sender, receiver, sender, receiver>
+  sync_channel(size_t buffer_size);
 
   /*
    * Send some bytes.
@@ -90,9 +98,11 @@ private:
   /*
    * Private constructor to be used by the friend functions.
    */
-  explicit sender(int socket_fd) : socket_fd(socket_fd) {}
+  explicit sender(int socket_fd, shared_buffer shared_mem)
+      : socket_fd(socket_fd), shared_mem(std::move(shared_mem)) {}
 
   int socket_fd;
+  shared_buffer shared_mem; // buffer used to hold large messages
 };
 
 /*
@@ -146,14 +156,17 @@ public:
    * \returns Two pairs of `(sender, receiver)`. One for each communicating
    * party.
    */
-  friend std::tuple<sender, receiver, sender, receiver> sync_channel();
+  friend std::tuple<sender, receiver, sender, receiver>
+  sync_channel(size_t buffer_size);
 
   /*
    * Receive some bytes.
    *
    * \param len Number of bytes to receive.
+   *
+   * \returns The received bytes wrapped in a `buffer`.
    */
-  void *receive_bytes(size_t len);
+  buffer receive_bytes(size_t len);
 
   /*
    * Receive a python object.
@@ -171,9 +184,11 @@ private:
   /*
    * Private constructor to be used by the friend functions.
    */
-  explicit receiver(int socket_fd) : socket_fd(socket_fd) {}
+  explicit receiver(int socket_fd, shared_buffer shared_mem)
+      : socket_fd(socket_fd), shared_mem(std::move(shared_mem)) {}
 
   int socket_fd;
+  shared_buffer shared_mem; // buffer used to hold large messages
 };
 
 /*
@@ -186,6 +201,20 @@ private:
  * party.
  */
 std::tuple<sender, receiver, sender, receiver> sync_channel();
+
+/*
+ * Create a synchronous channel.
+ *
+ * Here, synchronous means that the sender will block if the channel is full,
+ * and the receiver will block if there's no incoming messages.
+ *
+ * \param buffer_size The size of the channel buffer, which is allocated as
+ * shared memory.
+ *
+ * \returns Two pairs of `(sender, receiver)`. One for each communicating
+ * party.
+ */
+std::tuple<sender, receiver, sender, receiver> sync_channel(size_t buffer_size);
 
 } // namespace snakefish
 

@@ -13,12 +13,19 @@
 namespace snakefish {
 
 std::tuple<sender, receiver, sender, receiver> sync_channel() {
+  return sync_channel(DEFAULT_CHANNEL_SIZE);
+}
+
+std::tuple<sender, receiver, sender, receiver>
+sync_channel(const size_t channel_size) {
+  // open unix domain sockets
   int socket_fd[2];
   if (socketpair(AF_UNIX, SOCK_DGRAM, 0, socket_fd)) {
     perror("socketpair() failed");
     throw std::runtime_error("socketpair() failed");
   }
 
+  // update settings so sockets would close on exec()
   if (fcntl(socket_fd[0], F_SETFD, FD_CLOEXEC)) {
     perror("fcntl(FD_CLOEXEC) failed for sender socket");
     throw std::runtime_error("fcntl(FD_CLOEXEC) failed for sender socket");
@@ -28,18 +35,27 @@ std::tuple<sender, receiver, sender, receiver> sync_channel() {
     throw std::runtime_error("fcntl(FD_CLOEXEC) failed for receiver socket");
   }
 
-  return {sender(socket_fd[0]), receiver(socket_fd[0]),
-          sender(socket_fd[1]), receiver(socket_fd[1])};
+  // create shared buffer
+  shared_buffer shared_mem(channel_size);
+
+  return {sender(socket_fd[0], shared_mem), receiver(socket_fd[0], shared_mem),
+          sender(socket_fd[1], shared_mem), receiver(socket_fd[1], shared_mem)};
 }
 
 void sender::send_bytes(const void *bytes, const size_t len) {
-  ssize_t result = send(socket_fd, bytes, len, 0);
-  if (result == -1) {
-    perror("send() failed");
-    throw std::runtime_error("send() failed");
-  } else if ((size_t)result != len) {
-    fprintf(stderr, "sent %ld bytes, should be %ld bytes!\n", result, len);
-    abort();
+  if (len <= MAX_SOCK_MSG_SIZE) {
+    // for small messages, just send them through sockets
+    ssize_t result = send(socket_fd, bytes, len, 0);
+    if (result == -1) {
+      perror("send() failed");
+      throw std::runtime_error("send() failed");
+    } else if ((size_t)result != len) {
+      fprintf(stderr, "sent %ld bytes, should be %ld bytes!\n", result, len);
+      abort();
+    }
+  } else {
+    // for large messages, send them through shared memory
+    shared_mem.write(bytes, len);
   }
 }
 
@@ -60,26 +76,29 @@ void sender::dispose() {
   // Currently, a sender holds the same socket fd as its
   // corresponding receiver. As such, it makes sense
   // for the receiver to close() the socket fd, and the
-  // sender's dispose() should just be a no-op (~sender()
-  // is the default destructor that does nothing).
+  // sender's dispose() should just be a no-op.
   //
-  this->~sender();
+  (void)(this);
 }
 
-void *receiver::receive_bytes(const size_t len) {
-  void *bytes = malloc(len);
-  if (bytes == nullptr) {
-    perror("malloc() failed");
-    throw std::bad_alloc();
-  }
+buffer receiver::receive_bytes(const size_t len) {
+  buffer bytes = buffer(len, buffer_type::MALLOC);
+  char *buf = static_cast<char *>(bytes.get_ptr());
 
-  ssize_t result = recv(socket_fd, bytes, len, 0);
-  if (result == -1) {
-    perror("recv() failed");
-    throw std::runtime_error("recv() failed");
-  } else if ((size_t)result != len) {
-    fprintf(stderr, "received %ld bytes, should be %ld bytes!\n", result, len);
-    abort();
+  if (len <= MAX_SOCK_MSG_SIZE) {
+    // for small messages, just receive them through sockets
+    ssize_t result = recv(socket_fd, buf, len, 0);
+    if (result == -1) {
+      perror("recv() failed");
+      throw std::runtime_error("recv() failed");
+    } else if ((size_t)result != len) {
+      fprintf(stderr, "received %ld bytes, should be %ld bytes!\n", result,
+              len);
+      abort();
+    }
+  } else {
+    // for large messages, receive them from shared memory
+    shared_mem.read(buf, len);
   }
 
   return bytes;
@@ -89,17 +108,14 @@ py::object receiver::receive_pyobj() {
   py::object loads = py::module::import("pickle").attr("loads");
 
   // receive input size
-  Py_ssize_t *size_ptr =
-      reinterpret_cast<Py_ssize_t *>(receive_bytes(sizeof(Py_ssize_t)));
-  Py_ssize_t size = *size_ptr;
-  free(size_ptr);
+  buffer size_buf = receive_bytes(sizeof(Py_ssize_t));
+  Py_ssize_t size = *static_cast<Py_ssize_t *>(size_buf.get_ptr());
 
   // receive input
-  char *bytes = reinterpret_cast<char *>(receive_bytes(size));
-  py::handle mem_view =
-      py::handle(PyMemoryView_FromMemory(bytes, size, PyBUF_READ));
+  buffer bytes_buf = receive_bytes(size);
+  py::handle mem_view = py::handle(PyMemoryView_FromMemory(
+      static_cast<char *>(bytes_buf.get_ptr()), size, PyBUF_READ));
   py::object obj = loads(mem_view);
-  free(bytes);
 
   return obj;
 }

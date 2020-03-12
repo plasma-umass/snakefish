@@ -8,10 +8,12 @@ LINKER_OPTIONS = -Wl,-undefined,dynamic_lookup
 
 OUT := $(shell python3-config --extension-suffix)
 
+SRC = buffer.cpp channel.cpp shared_buffer.cpp snakefish.cpp thread.cpp
+
 
 .PHONY: snakefish clean
 
-snakefish: snakefish.cpp thread.cpp channel.cpp
+snakefish: $(SRC)
 	g++ $(FLAGS) $(INCLUDES) $(PY_INCLUDES) $(LINKER_OPTIONS) $^ -o c$@$(OUT)
 	mv csnakefish.*.so ./snakefish
 

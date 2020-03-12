@@ -77,6 +77,12 @@ shared_buffer::shared_buffer(const size_t len) : capacity(len) {
   *start = 0;
   *end = 0;
   *full = false;
+
+  // ensure that std::atomic_uint32_t is lock free
+  if (!ref_cnt->is_lock_free()) {
+    fprintf(stderr, "std::atomic_uint32_t is not lock free!\n");
+    abort();
+  }
 }
 
 void shared_buffer::read(void *buf, const size_t n) {

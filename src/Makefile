@@ -15,7 +15,7 @@ SRC = buffer.cpp channel.cpp shared_buffer.cpp snakefish.cpp thread.cpp
 
 snakefish: $(SRC)
 	g++ $(FLAGS) $(INCLUDES) $(PY_INCLUDES) $(LINKER_OPTIONS) $^ -o c$@$(OUT)
-	mv csnakefish.*.so ./snakefish
+	cp csnakefish.*.so ./snakefish
 
 clean:
 	rm -rf ./csnakefish.*.so

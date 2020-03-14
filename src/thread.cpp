@@ -53,6 +53,8 @@ void thread::join() {
   } else {
     alive = false;
     ret_val = get_receiver().receive_pyobj();
+    globals = get_receiver().receive_pyobj();
+    merge_func(py::globals(), globals);
   }
 }
 
@@ -77,6 +79,8 @@ bool thread::try_join() {
   } else {
     alive = false;
     ret_val = get_receiver().receive_pyobj();
+    globals = get_receiver().receive_pyobj();
+    merge_func(py::globals(), globals);
     return true;
   }
 }
@@ -109,6 +113,8 @@ void thread::run() {
 
   ret_val = func();
   get_sender().send_pyobj(ret_val);
+  globals = extract_func(py::globals());
+  get_sender().send_pyobj(globals);
   exit(0);
 }
 

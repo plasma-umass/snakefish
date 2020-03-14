@@ -42,10 +42,23 @@ public:
    * Create a new snakefish thread.
    *
    * \param f The Python function this thread will execute.
+   *
+   * \param extract The globals extraction function this thread will execute.
+   * Its signature should be `(dict) -> dict`. It should take the current
+   * `globals()` and return a dict of globals that must be kept. The
+   * returned dict will be passed to `merge` as the second parameter. Note that
+   * anything contained in the returned dict must be [picklable]
+   * (https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled).
+   *
+   * \param merge The merge function this thread will execute. Its signature
+   * should be `(dict, dict) -> nil`. The first dict is the current `globals()`,
+   * and the second dict is the new `globals()`. The merge function must merge
+   * the two by updating the first dict.
    */
-  explicit thread(py::function f)
+  thread(py::function f, py::function extract, py::function merge)
       : is_parent(false), child_pid(0), started(false), alive(false),
-        child_status(0), func(std::move(f)), channel(sync_channel()) {}
+        child_status(0), func(std::move(f)), extract_func(std::move(extract)),
+        merge_func(std::move(merge)), channel(sync_channel()) {}
 
   /*
    * Destructor.
@@ -122,7 +135,10 @@ private:
   bool alive;
   int child_status;
   py::function func;
+  py::function extract_func;
+  py::function merge_func;
   py::object ret_val;
+  py::object globals;
   std::tuple<sender, receiver, sender, receiver> channel;
 };
 

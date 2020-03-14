@@ -4,7 +4,7 @@ PYBIND11_MODULE(csnakefish, m) {
   m.doc() = "true parallelism for python";
 
   py::class_<snakefish::thread>(m, "Thread")
-      .def(py::init<py::function>())
+      .def(py::init<py::function, py::function, py::function>())
       .def("start", &snakefish::thread::start)
       .def("join", &snakefish::thread::join)
       .def("try_join", &snakefish::thread::try_join)

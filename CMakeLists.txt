@@ -29,6 +29,10 @@ target_include_directories(snakefish PRIVATE
         include
         ${Python3_INCLUDE_DIRS})
 
+if(${CMAKE_SYSTEM_NAME} STREQUAL Linux)
+    target_link_libraries(snakefish PRIVATE atomic)
+endif()
+
 target_compile_options(snakefish PRIVATE
         -Wall
         -Wextra)

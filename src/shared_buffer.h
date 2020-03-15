@@ -61,7 +61,7 @@ public:
    */
   void write(const void *buf, size_t n);
 
-private:
+protected:
   void *shared_mem;              // shared memory, used as a ring buffer
   std::atomic_uint32_t *ref_cnt; // reference counter
   std::atomic_flag *lock;        // "mutex" for the shared memory

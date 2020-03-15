@@ -8,8 +8,8 @@
 namespace snakefish {
 
 /**
- * \brief A wrapper around mmap'd shared memory with built-in synchronization and
- * reference counting support.
+ * \brief A wrapper around mmap'd shared memory with built-in synchronization
+ * and reference counting support.
  *
  * `shared_buffer` is like a stream of bytes. Once a byte is read, it's
  * consumed and no longer available.

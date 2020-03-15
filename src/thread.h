@@ -15,6 +15,9 @@ namespace py = pybind11;
 
 namespace snakefish {
 
+/**
+ * \brief A "thread" class for executing Python functions with true parallelism.
+ */
 class [[gnu::visibility("hidden")]] thread {
 public:
   /**
@@ -113,7 +116,8 @@ public:
   int get_exit_status();
 
   /**
-   * \brief Get the output of the thread (i.e. the output of the underlying function).
+   * \brief Get the output of the thread (i.e. the output of the underlying
+   * function).
    */
   py::object get_result() { return ret_val; }
 

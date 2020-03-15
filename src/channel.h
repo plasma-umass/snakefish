@@ -196,7 +196,7 @@ private:
 };
 
 /**
- * \brief Create a synchronous channel.
+ * \brief Create a synchronous channel with buffer size `DEFAULT_CHANNEL_SIZE`.
  *
  * Here, synchronous means that the sender will block if the channel is full,
  * and the receiver will block if there's no incoming messages.

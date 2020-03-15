@@ -13,6 +13,7 @@ class shared_buffer_test : public shared_buffer {
 public:
   using shared_buffer::shared_mem;
   using shared_buffer::ref_cnt;
+  using shared_buffer::local_ref_cnt;
   using shared_buffer::lock;
   using shared_buffer::start;
   using shared_buffer::end;
@@ -26,6 +27,7 @@ TEST(SharedBufferTest, ReadWriteNoWrapping) {
   shared_buffer_test shared_buf = shared_buffer_test(capacity);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, false);
@@ -36,6 +38,7 @@ TEST(SharedBufferTest, ReadWriteNoWrapping) {
   shared_buf.write(bytes.get_ptr(), capacity - 1);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, capacity - 1);
   ASSERT_EQ(*shared_buf.full, false);
@@ -46,6 +49,7 @@ TEST(SharedBufferTest, ReadWriteNoWrapping) {
   ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), capacity - 1), 0);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, capacity - 1);
   ASSERT_EQ(*shared_buf.end, capacity - 1);
   ASSERT_EQ(*shared_buf.full, false);
@@ -57,6 +61,7 @@ TEST(SharedBufferTest, ReadWriteWithWrapping) {
   shared_buffer_test shared_buf = shared_buffer_test(capacity);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, false);
@@ -67,6 +72,7 @@ TEST(SharedBufferTest, ReadWriteWithWrapping) {
   shared_buf.write(bytes.get_ptr(), capacity);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, true);
@@ -77,6 +83,7 @@ TEST(SharedBufferTest, ReadWriteWithWrapping) {
   ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), capacity), 0);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, false);
@@ -88,6 +95,7 @@ TEST(SharedBufferTest, ReadWriteAfterWrapping) {
   shared_buffer_test shared_buf = shared_buffer_test(capacity);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, false);
@@ -98,6 +106,7 @@ TEST(SharedBufferTest, ReadWriteAfterWrapping) {
   shared_buf.write(bytes.get_ptr(), capacity / 2);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, capacity / 2);
   ASSERT_EQ(*shared_buf.full, false);
@@ -108,6 +117,7 @@ TEST(SharedBufferTest, ReadWriteAfterWrapping) {
   ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), capacity / 2), 0);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, capacity / 2);
   ASSERT_EQ(*shared_buf.end, capacity / 2);
   ASSERT_EQ(*shared_buf.full, false);
@@ -118,6 +128,7 @@ TEST(SharedBufferTest, ReadWriteAfterWrapping) {
   shared_buf.write(bytes2.get_ptr(), capacity);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, capacity / 2);
   ASSERT_EQ(*shared_buf.end, capacity / 2);
   ASSERT_EQ(*shared_buf.full, true);
@@ -128,6 +139,7 @@ TEST(SharedBufferTest, ReadWriteAfterWrapping) {
   ASSERT_EQ(memcmp(copy2.get_ptr(), read_bytes2.get_ptr(), capacity), 0);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, capacity / 2);
   ASSERT_EQ(*shared_buf.end, capacity / 2);
   ASSERT_EQ(*shared_buf.full, false);
@@ -139,6 +151,7 @@ TEST(SharedBufferTest, PartialReads) {
   shared_buffer_test shared_buf = shared_buffer_test(capacity);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, false);
@@ -149,6 +162,7 @@ TEST(SharedBufferTest, PartialReads) {
   shared_buf.write(bytes.get_ptr(), capacity);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, true);
@@ -159,6 +173,7 @@ TEST(SharedBufferTest, PartialReads) {
   ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), capacity / 2), 0);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, capacity / 2);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, false);
@@ -169,6 +184,7 @@ TEST(SharedBufferTest, PartialReads) {
   ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), capacity), 0);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, false);
@@ -180,6 +196,7 @@ TEST(SharedBufferTest, IpcReadWrite) {
   shared_buffer_test shared_buf = shared_buffer_test(capacity);
   ASSERT_NE(shared_buf.shared_mem, nullptr);
   ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
   ASSERT_EQ(*shared_buf.start, 0);
   ASSERT_EQ(*shared_buf.end, 0);
   ASSERT_EQ(*shared_buf.full, false);
@@ -188,20 +205,24 @@ TEST(SharedBufferTest, IpcReadWrite) {
   buffer bytes = get_random_bytes(capacity);
   buffer copy = duplicate_bytes(bytes.get_ptr(), capacity);
 
+  shared_buf.fork();
   pid_t result = fork();
   if (result == 0) {
     // child writes
     shared_buf.write(bytes.get_ptr(), capacity);
     ASSERT_NE(shared_buf.shared_mem, nullptr);
     ASSERT_EQ(*shared_buf.ref_cnt, 2);
+    ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
     ASSERT_EQ(*shared_buf.start, 0);
     ASSERT_EQ(*shared_buf.end, 0);
     ASSERT_EQ(*shared_buf.full, true);
     ASSERT_EQ(shared_buf.capacity, capacity);
-  } else if (result > 0) {
-    // create a copy to simulate IPC
-    shared_buffer_test shared_buf2 = shared_buf;
 
+    // child exits
+    // cleanup necessary because d'tors won't be called when calling exit()
+    shared_buf.~shared_buffer_test();
+    exit(0);
+  } else if (result > 0) {
     // sleep for 100 ms so the write can complete
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -211,6 +232,7 @@ TEST(SharedBufferTest, IpcReadWrite) {
     ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), capacity), 0);
     ASSERT_NE(shared_buf.shared_mem, nullptr);
     ASSERT_EQ(*shared_buf.ref_cnt, 1);
+    ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
     ASSERT_EQ(*shared_buf.start, 0);
     ASSERT_EQ(*shared_buf.end, 0);
     ASSERT_EQ(*shared_buf.full, false);
@@ -225,6 +247,16 @@ TEST(SharedBufferTest, IpcReadWrite) {
       ASSERT_EQ(WIFEXITED(status), 1);
       ASSERT_EQ(WEXITSTATUS(status), 0);
     }
+
+    // check again after child exits
+    ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), capacity), 0);
+    ASSERT_NE(shared_buf.shared_mem, nullptr);
+    ASSERT_EQ(*shared_buf.ref_cnt, 1);
+    ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+    ASSERT_EQ(*shared_buf.start, 0);
+    ASSERT_EQ(*shared_buf.end, 0);
+    ASSERT_EQ(*shared_buf.full, false);
+    ASSERT_EQ(shared_buf.capacity, capacity);
   } else {
     perror("fork() failed");
     abort();

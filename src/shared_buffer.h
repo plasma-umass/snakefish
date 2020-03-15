@@ -9,10 +9,14 @@ namespace snakefish {
 
 /**
  * \brief A wrapper around mmap'd shared memory with built-in synchronization
- * and reference counting support.
+ * and (semi-automatic) reference counting support.
  *
  * `shared_buffer` is like a stream of bytes. Once a byte is read, it's
  * consumed and no longer available.
+ *
+ * The support for reference counting is "semi-automatic" in the sense that
+ * the `shared_buffer::fork()` function must be called right before calling
+ * the system `fork()`.
  */
 class shared_buffer {
 public:
@@ -61,14 +65,21 @@ public:
    */
   void write(const void *buf, size_t n);
 
+  /**
+   * Called by the client to indicate that this `shared_buffer` is about to be
+   * shared with another process.
+   */
+  void fork();
+
 protected:
-  void *shared_mem;              // shared memory, used as a ring buffer
-  std::atomic_uint32_t *ref_cnt; // reference counter
-  std::atomic_flag *lock;        // "mutex" for the shared memory
-  size_t *start;                 // index of first used byte
-  size_t *end;                   // index of first unused byte
-  bool *full;                    // is the buffer full
-  size_t capacity;               // max # of bytes this buffer can hold
+  void *shared_mem;                    // shared memory, used as a ring buffer
+  std::atomic_uint32_t *ref_cnt;       // global reference counter
+  std::atomic_uint32_t *local_ref_cnt; // process local reference counter
+  std::atomic_flag *lock;              // "mutex" for the shared memory
+  size_t *start;                       // index of first used byte
+  size_t *end;                         // index of first unused byte
+  bool *full;                          // is the buffer full
+  size_t capacity;                     // max # of bytes this buffer can hold
 };
 
 } // namespace snakefish

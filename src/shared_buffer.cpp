@@ -8,7 +8,14 @@
 namespace snakefish {
 
 shared_buffer::~shared_buffer() {
-  if (ref_cnt->fetch_sub(1) == 1) {
+  uint32_t global_cnt = ref_cnt->fetch_sub(1) - 1;
+  uint32_t local_cnt = local_ref_cnt->fetch_sub(1) - 1;
+
+  if (local_cnt == 0) {
+    free(local_ref_cnt);
+  }
+
+  if ((local_cnt == 0) && (global_cnt == 0)) {
     if (munmap(shared_mem, capacity)) {
       fprintf(stderr, "munmap() failed!\n");
       abort();
@@ -39,25 +46,31 @@ shared_buffer::~shared_buffer() {
 shared_buffer::shared_buffer(const shared_buffer &t) {
   shared_mem = t.shared_mem;
   ref_cnt = t.ref_cnt;
+  local_ref_cnt = t.local_ref_cnt;
   lock = t.lock;
   start = t.start;
   end = t.end;
   full = t.full;
   capacity = t.capacity;
 
-  ref_cnt->fetch_add(1); // increment reference counter
+  // increment reference counters
+  ref_cnt->fetch_add(1);
+  local_ref_cnt->fetch_add(1);
 }
 
 shared_buffer::shared_buffer(shared_buffer &&t) noexcept {
   shared_mem = t.shared_mem;
   ref_cnt = t.ref_cnt;
+  local_ref_cnt = t.local_ref_cnt;
   lock = t.lock;
   start = t.start;
   end = t.end;
   full = t.full;
   capacity = t.capacity;
 
-  ref_cnt->fetch_add(1); // increment reference counter
+  // increment reference counters
+  ref_cnt->fetch_add(1);
+  local_ref_cnt->fetch_add(1);
 }
 
 shared_buffer::shared_buffer(const size_t len) : capacity(len) {
@@ -65,6 +78,8 @@ shared_buffer::shared_buffer(const size_t len) : capacity(len) {
   shared_mem = get_shared_mem(len, false);
   ref_cnt = static_cast<std::atomic_uint32_t *>(
       get_shared_mem(sizeof(std::atomic_uint32_t), true));
+  local_ref_cnt =
+      static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
   lock = static_cast<std::atomic_flag *>(
       get_shared_mem(sizeof(std::atomic_flag), true));
   start = static_cast<size_t *>(get_shared_mem(sizeof(size_t), true));
@@ -74,6 +89,7 @@ shared_buffer::shared_buffer(const size_t len) : capacity(len) {
   // initialize metadata
   new (lock) std::atomic_flag;
   *ref_cnt = 1;
+  *local_ref_cnt = 1;
   *start = 0;
   *end = 0;
   *full = false;
@@ -173,5 +189,7 @@ void shared_buffer::write(const void *buf, const size_t n) {
   *end = new_end;
   lock->clear();
 }
+
+void shared_buffer::fork() { ref_cnt->fetch_add(*local_ref_cnt); }
 
 } // namespace snakefish

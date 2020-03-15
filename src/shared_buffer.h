@@ -1,10 +1,14 @@
+/**
+ * \file shared_buffer.h
+ */
+
 #ifndef SNAKEFISH_SHARED_BUFFER_H
 #define SNAKEFISH_SHARED_BUFFER_H
 
 namespace snakefish {
 
-/*
- * A wrapper around mmap'd shared memory with built-in synchronization and
+/**
+ * \brief A wrapper around mmap'd shared memory with built-in synchronization and
  * reference counting support.
  *
  * `shared_buffer` is like a stream of bytes. Once a byte is read, it's
@@ -12,48 +16,48 @@ namespace snakefish {
  */
 class shared_buffer {
 public:
-  /*
-   * No default constructor.
+  /**
+   * \brief No default constructor.
    */
   shared_buffer() = delete;
 
-  /*
-   * Destructor implementing reference counting.
+  /**
+   * \brief Destructor implementing reference counting.
    */
   ~shared_buffer();
 
-  /*
-   * Copy constructor implementing reference counting.
+  /**
+   * \brief Copy constructor implementing reference counting.
    */
   shared_buffer(const shared_buffer &t);
 
-  /*
-   * No copy assignment operator.
+  /**
+   * \brief No copy assignment operator.
    */
   shared_buffer &operator=(const shared_buffer &t) = delete;
 
-  /*
-   * Move constructor implementing reference counting.
+  /**
+   * \brief Move constructor implementing reference counting.
    */
   shared_buffer(shared_buffer &&t) noexcept;
 
-  /*
-   * No move assignment operator.
+  /**
+   * \brief No move assignment operator.
    */
   shared_buffer &operator=(shared_buffer &&t) = delete;
 
-  /*
-   * Create a new shared buffer.
+  /**
+   * \brief Create a new shared buffer.
    */
   explicit shared_buffer(size_t len);
 
-  /*
-   * Copy `len` bytes from the underlying buffer into `buf`.
+  /**
+   * \brief Copy `len` bytes from the underlying buffer into `buf`.
    */
   void read(void *buf, size_t n);
 
-  /*
-   * Copy `n` bytes from `buf` into the underlying buffer.
+  /**
+   * \brief Copy `n` bytes from `buf` into the underlying buffer.
    */
   void write(const void *buf, size_t n);
 

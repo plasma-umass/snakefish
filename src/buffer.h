@@ -1,3 +1,7 @@
+/**
+ * \file buffer.h
+ */
+
 #ifndef SNAKEFISH_BUFFER_H
 #define SNAKEFISH_BUFFER_H
 
@@ -5,45 +9,45 @@
 
 namespace snakefish {
 
-/*
- * An enum describing how the buffer was allocated.
+/**
+ * \brief An enum describing how the `buffer` was allocated.
  */
 enum buffer_type { MALLOC, MMAP };
 
-/*
- * A wrapper around dynamically allocated memory buffers.
+/**
+ * \brief A wrapper around dynamically allocated memory buffers.
  *
  * This makes memory management easier.
  */
 class buffer {
 public:
-  /*
-   * No default constructor.
+  /**
+   * \brief No default constructor.
    */
   buffer() = delete;
 
-  /*
-   * No copy constructor.
+  /**
+   * \brief No copy constructor.
    */
   buffer(const buffer &t) = delete;
 
-  /*
-   * No copy assignment operator.
+  /**
+   * \brief No copy assignment operator.
    */
   buffer &operator=(const buffer &t) = delete;
 
-  /*
-   * Default move constructor.
+  /**
+   * \brief Default move constructor.
    */
   buffer(buffer &&t) = default;
 
-  /*
-   * No move assignment operator.
+  /**
+   * \brief No move assignment operator.
    */
   buffer &operator=(buffer &&t) = delete;
 
-  /*
-   * Create a new buffer.
+  /**
+   * \brief Create a new buffer.
    *
    * If type is `MALLOC`, the underlying memory buffer will be allocated
    * using the default `malloc()`.
@@ -53,23 +57,23 @@ public:
    */
   buffer(size_t len, buffer_type type);
 
-  /*
-   * Destructor.
+  /**
+   * \brief Destructor.
    */
   ~buffer();
 
-  /*
-   * Return a pointer to the start of the underlying memory buffer.
+  /**
+   * \brief Return a pointer to the start of the underlying memory buffer.
    */
   void *get_ptr() { return buf; }
 
-  /*
-   * Return the length of the underlying memory buffer.
+  /**
+   * \brief Return the length of the underlying memory buffer.
    */
   size_t get_len() { return len; }
 
-  /*
-   * Return the type of the underlying memory buffer.
+  /**
+   * \brief Return the type of the underlying memory buffer.
    */
   buffer_type get_type() { return type; }
 

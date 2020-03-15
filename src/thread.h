@@ -1,3 +1,7 @@
+/**
+ * \file thread.h
+ */
+
 #ifndef SNAKEFISH_THREAD_H
 #define SNAKEFISH_THREAD_H
 
@@ -13,33 +17,33 @@ namespace snakefish {
 
 class [[gnu::visibility("hidden")]] thread {
 public:
-  /*
-   * No default constructor.
+  /**
+   * \brief No default constructor.
    */
   thread() = delete;
 
-  /*
-   * No copy constructor.
+  /**
+   * \brief No copy constructor.
    */
   thread(const thread &t) = delete;
 
-  /*
-   * No copy assignment operator.
+  /**
+   * \brief No copy assignment operator.
    */
   thread &operator=(const thread &t) = delete;
 
-  /*
-   * No move constructor.
+  /**
+   * \brief No move constructor.
    */
   thread(thread && t) = delete;
 
-  /*
-   * No move assignment operator.
+  /**
+   * \brief No move assignment operator.
    */
   thread &operator=(thread &&t) = delete;
 
-  /*
-   * Create a new snakefish thread.
+  /**
+   * \brief Create a new snakefish thread.
    *
    * \param f The Python function this thread will execute.
    *
@@ -60,27 +64,27 @@ public:
         child_status(0), func(std::move(f)), extract_func(std::move(extract)),
         merge_func(std::move(merge)), channel(sync_channel()) {}
 
-  /*
-   * Destructor.
+  /**
+   * \brief Destructor.
    */
   ~thread();
 
-  /*
-   * Start executing this thread. In other words, start executing the
+  /**
+   * \brief Start executing this thread. In other words, start executing the
    * underlying function.
    */
   void start();
 
-  /*
-   * Join this thread.
+  /**
+   * \brief Join this thread.
    *
    * This will block the calling thread until this thread terminates. If the
    * thread hasn't been started yet, this function will throw an exception.
    */
   void join();
 
-  /*
-   * Try to join this thread.
+  /**
+   * \brief Try to join this thread.
    *
    * This is the non-blocking version of `join()`.
    *
@@ -88,16 +92,16 @@ public:
    */
   bool try_join();
 
-  /*
-   * Get the status of the thread.
+  /**
+   * \brief Get the status of the thread.
    *
    * \returns `true` if this thread has been started and has not yet terminated;
    * `false` otherwise.
    */
   bool is_alive() { return alive; }
 
-  /*
-   * Get the exit status of the thread.
+  /**
+   * \brief Get the exit status of the thread.
    *
    * \returns -1 if the thread hasn't been started yet. -2 if the thread hasn't
    * exited yet. -3 if the thread exited abnormally. Otherwise, the exit status
@@ -108,24 +112,24 @@ public:
    */
   int get_exit_status();
 
-  /*
-   * Get the output of the thread (i.e. the output of the underlying function).
+  /**
+   * \brief Get the output of the thread (i.e. the output of the underlying function).
    */
   py::object get_result() { return ret_val; }
 
 private:
-  /*
-   * Run the underlying function and return the result to the parent.
+  /**
+   * \brief Run the underlying function and return the result to the parent.
    */
   void run();
 
-  /*
-   * Convenience function to get the `sender` out of `channel`.
+  /**
+   * \brief Convenience function to get the `sender` out of `channel`.
    */
   sender &get_sender();
 
-  /*
-   * Convenience function to get the `receiver` out of `channel`.
+  /**
+   * \brief Convenience function to get the `receiver` out of `channel`.
    */
   receiver &get_receiver();
 

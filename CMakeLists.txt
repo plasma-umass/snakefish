@@ -50,7 +50,7 @@ add_subdirectory(googletest)
 add_executable(test
         src/tests/main.cpp
         src/tests/shared_buffer_tests.h
-        src/tests/util.h)
+        src/tests/test_util.h)
 
 target_include_directories(test PRIVATE
         src

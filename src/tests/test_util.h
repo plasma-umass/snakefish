@@ -1,5 +1,5 @@
-#ifndef SNAKEFISH_UTIL_H
-#define SNAKEFISH_UTIL_H
+#ifndef SNAKEFISH_TEST_UTIL_H
+#define SNAKEFISH_TEST_UTIL_H
 
 #include <random>
 
@@ -35,4 +35,4 @@ static buffer duplicate_bytes(const void *bytes, const size_t len) {
   return buf;
 }
 
-#endif // SNAKEFISH_UTIL_H
+#endif // SNAKEFISH_TEST_UTIL_H

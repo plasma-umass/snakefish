@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 
 #include "shared_buffer.h"
-#include "util.h"
+#include "test_util.h"
 using namespace snakefish;
 
 class shared_buffer_test : public shared_buffer {

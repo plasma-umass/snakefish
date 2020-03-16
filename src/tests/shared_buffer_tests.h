@@ -191,6 +191,135 @@ TEST(SharedBufferTest, PartialReads) {
   ASSERT_EQ(shared_buf.capacity, capacity);
 }
 
+TEST(SharedBufferTest, WriteOverflow) {
+  size_t capacity = 1024;
+  shared_buffer_test shared_buf = shared_buffer_test(capacity);
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, 0);
+  ASSERT_EQ(*shared_buf.end, 0);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+
+  // without wrapping
+  buffer bytes = get_random_bytes(capacity + 1);
+  try {
+    shared_buf.write(bytes.get_ptr(), capacity + 1);
+  } catch (const std::runtime_error &e) {
+    ASSERT_EQ(std::string(e.what()), "channel buffer is full");
+  }
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, 0);
+  ASSERT_EQ(*shared_buf.end, 0);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+
+  // with wrapping
+  buffer bytes2 = get_random_bytes(capacity / 2);
+  shared_buf.write(bytes2.get_ptr(), capacity / 2);
+
+  buffer read_bytes = buffer(capacity / 2, buffer_type::MALLOC);
+  shared_buf.read(read_bytes.get_ptr(), capacity / 2);
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, capacity / 2);
+  ASSERT_EQ(*shared_buf.end, capacity / 2);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+
+  shared_buf.write(bytes2.get_ptr(), capacity / 2);
+  shared_buf.write(bytes2.get_ptr(), 1);
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, capacity / 2);
+  ASSERT_EQ(*shared_buf.end, 1);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+
+  try {
+    shared_buf.write(bytes2.get_ptr(), capacity / 2);
+  } catch (const std::runtime_error &e) {
+    ASSERT_EQ(std::string(e.what()), "channel buffer is full");
+  }
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, capacity / 2);
+  ASSERT_EQ(*shared_buf.end, 1);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+}
+
+TEST(SharedBufferTest, ReadOutOfBound) {
+  size_t capacity = 1024;
+  shared_buffer_test shared_buf = shared_buffer_test(capacity);
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, 0);
+  ASSERT_EQ(*shared_buf.end, 0);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+
+  // without wrapping
+  buffer read_bytes = buffer(1, buffer_type::MALLOC);
+  try {
+    shared_buf.read(read_bytes.get_ptr(), 1);
+  } catch (const std::runtime_error &e) {
+    ASSERT_EQ(std::string(e.what()), "out-of-bounds read detected");
+  }
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, 0);
+  ASSERT_EQ(*shared_buf.end, 0);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+
+  // with wrapping
+  buffer bytes = get_random_bytes(capacity / 2);
+  shared_buf.write(bytes.get_ptr(), capacity / 2);
+
+  buffer read_bytes2 = buffer(capacity / 2, buffer_type::MALLOC);
+  shared_buf.read(read_bytes2.get_ptr(), capacity / 2);
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, capacity / 2);
+  ASSERT_EQ(*shared_buf.end, capacity / 2);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+
+  shared_buf.write(bytes.get_ptr(), capacity / 2);
+  shared_buf.write(bytes.get_ptr(), 1);
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, capacity / 2);
+  ASSERT_EQ(*shared_buf.end, 1);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+
+  buffer read_bytes3 = buffer(capacity / 2 + 2, buffer_type::MALLOC);
+  try {
+    shared_buf.read(read_bytes3.get_ptr(), capacity / 2 + 2);
+  } catch (const std::runtime_error &e) {
+    ASSERT_EQ(std::string(e.what()), "out-of-bounds read detected");
+  }
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, capacity / 2);
+  ASSERT_EQ(*shared_buf.end, 1);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+}
+
 TEST(SharedBufferTest, IpcReadWrite) {
   size_t capacity = 1024;
   shared_buffer_test shared_buf = shared_buffer_test(capacity);
@@ -260,6 +389,113 @@ TEST(SharedBufferTest, IpcReadWrite) {
   } else {
     perror("fork() failed");
     abort();
+  }
+}
+
+TEST(SharedBufferTest, MultiProcessSharing) {
+  size_t capacity = 1024;
+  shared_buffer_test shared_buf = shared_buffer_test(capacity);
+  ASSERT_NE(shared_buf.shared_mem, nullptr);
+  ASSERT_EQ(*shared_buf.ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+  ASSERT_EQ(*shared_buf.start, 0);
+  ASSERT_EQ(*shared_buf.end, 0);
+  ASSERT_EQ(*shared_buf.full, false);
+  ASSERT_EQ(shared_buf.capacity, capacity);
+
+  // parent forks
+  shared_buf.fork();
+  pid_t result = fork();
+  if (result < 0) {
+    perror("fork() failed");
+    abort();
+  } else if (result > 0) {
+    // check child status
+    int status = 0;
+    if (waitpid(result, &status, 0) == -1) {
+      perror("waitpid() failed");
+      abort();
+    } else {
+      ASSERT_EQ(WIFEXITED(status), 1);
+      ASSERT_EQ(WEXITSTATUS(status), 0);
+    }
+
+    // check again after child exits
+    ASSERT_NE(shared_buf.shared_mem, nullptr);
+    ASSERT_EQ(*shared_buf.ref_cnt, 1);
+    ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+    ASSERT_EQ(*shared_buf.start, 0);
+    ASSERT_EQ(*shared_buf.end, 0);
+    ASSERT_EQ(*shared_buf.full, false);
+    ASSERT_EQ(shared_buf.capacity, capacity);
+  } else {
+    // before child make a copy of the shared buffer
+    ASSERT_NE(shared_buf.shared_mem, nullptr);
+    ASSERT_EQ(*shared_buf.ref_cnt, 2);
+    ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
+    ASSERT_EQ(*shared_buf.start, 0);
+    ASSERT_EQ(*shared_buf.end, 0);
+    ASSERT_EQ(*shared_buf.full, false);
+    ASSERT_EQ(shared_buf.capacity, capacity);
+
+    shared_buffer_test shared_buf2 = shared_buf;
+
+    // after child make a copy of the shared buffer
+    ASSERT_NE(shared_buf.shared_mem, nullptr);
+    ASSERT_EQ(*shared_buf.ref_cnt, 3);
+    ASSERT_EQ(*shared_buf.local_ref_cnt, 2);
+    ASSERT_EQ(*shared_buf.start, 0);
+    ASSERT_EQ(*shared_buf.end, 0);
+    ASSERT_EQ(*shared_buf.full, false);
+    ASSERT_EQ(shared_buf.capacity, capacity);
+
+    // child forks
+    shared_buf.fork();
+    result = fork();
+    if (result < 0) {
+      perror("fork() failed");
+      abort();
+    } else if (result > 0) {
+      // check grandchild status
+      int status = 0;
+      if (waitpid(result, &status, 0) == -1) {
+        perror("waitpid() failed");
+        abort();
+      } else {
+        ASSERT_EQ(WIFEXITED(status), 1);
+        ASSERT_EQ(WEXITSTATUS(status), 0);
+      }
+
+      // check again after grandchild exits
+      ASSERT_NE(shared_buf.shared_mem, nullptr);
+      ASSERT_EQ(*shared_buf.ref_cnt, 3);
+      ASSERT_EQ(*shared_buf.local_ref_cnt, 2);
+      ASSERT_EQ(*shared_buf.start, 0);
+      ASSERT_EQ(*shared_buf.end, 0);
+      ASSERT_EQ(*shared_buf.full, false);
+      ASSERT_EQ(shared_buf.capacity, capacity);
+
+      // child exits
+      // cleanup necessary because d'tors won't be called when calling exit()
+      shared_buf.~shared_buffer_test();
+      shared_buf2.~shared_buffer_test();
+      exit(0);
+    } else {
+      // grandchild
+      ASSERT_NE(shared_buf.shared_mem, nullptr);
+      ASSERT_EQ(*shared_buf.ref_cnt, 5);
+      ASSERT_EQ(*shared_buf.local_ref_cnt, 2);
+      ASSERT_EQ(*shared_buf.start, 0);
+      ASSERT_EQ(*shared_buf.end, 0);
+      ASSERT_EQ(*shared_buf.full, false);
+      ASSERT_EQ(shared_buf.capacity, capacity);
+
+      // grandchild exits
+      // cleanup necessary because d'tors won't be called when calling exit()
+      shared_buf.~shared_buffer_test();
+      shared_buf2.~shared_buffer_test();
+      exit(0);
+    }
   }
 }
 

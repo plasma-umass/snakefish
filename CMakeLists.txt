@@ -49,6 +49,7 @@ add_subdirectory(googletest)
 
 add_executable(test
         src/tests/main.cpp
+        src/tests/channel_tests.h
         src/tests/shared_buffer_tests.h
         src/tests/test_util.h)
 

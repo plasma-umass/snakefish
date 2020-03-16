@@ -3,6 +3,7 @@
 #include <pybind11/embed.h>
 namespace py = pybind11;
 
+#include "channel_tests.h"
 #include "shared_buffer_tests.h"
 
 int main(int argc, char **argv) {

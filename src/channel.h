@@ -121,7 +121,7 @@ public:
    */
   void fork();
 
-private:
+protected:
   /**
    * \brief Private constructor to be used by the friend functions.
    */

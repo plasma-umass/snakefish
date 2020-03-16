@@ -13,12 +13,11 @@
 
 namespace snakefish {
 
-std::tuple<sender, receiver, sender, receiver> sync_channel() {
+std::pair<channel, channel> sync_channel() {
   return sync_channel(DEFAULT_CHANNEL_SIZE);
 }
 
-std::tuple<sender, receiver, sender, receiver>
-sync_channel(const size_t channel_size) {
+std::pair<channel, channel> sync_channel(const size_t channel_size) {
   // open unix domain sockets
   int socket_fd[2];
   if (socketpair(AF_UNIX, SOCK_DGRAM, 0, socket_fd)) {
@@ -44,22 +43,20 @@ sync_channel(const size_t channel_size) {
       get_shared_mem(sizeof(std::atomic_uint32_t), true));
   auto local_ref_cnt =
       static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
+  auto ref_cnt2 = static_cast<std::atomic_uint32_t *>(
+      get_shared_mem(sizeof(std::atomic_uint32_t), true));
   auto local_ref_cnt2 =
       static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
-  *ref_cnt = 4;
-  *local_ref_cnt = 2;
-  *local_ref_cnt2 = 2;
+  *ref_cnt = 1;
+  *local_ref_cnt = 1;
+  *ref_cnt2 = 1;
+  *local_ref_cnt2 = 1;
 
-  return {sender(socket_fd[0], shared_mem, ref_cnt, local_ref_cnt),
-          receiver(socket_fd[0], shared_mem, ref_cnt, local_ref_cnt),
-          sender(socket_fd[1], shared_mem, ref_cnt, local_ref_cnt2),
-          receiver(socket_fd[1], shared_mem, ref_cnt, local_ref_cnt2)};
+  return {channel(socket_fd[0], shared_mem, ref_cnt, local_ref_cnt, true),
+          channel(socket_fd[1], shared_mem, ref_cnt2, local_ref_cnt2, false)};
 }
 
-// Currently, a sender holds the same socket fd as its
-// corresponding receiver. As such, it makes sense
-// for the receiver to close() the socket fd
-sender::~sender() {
+channel::~channel() {
   uint32_t global_cnt = ref_cnt->fetch_sub(1) - 1;
   uint32_t local_cnt = local_ref_cnt->fetch_sub(1) - 1;
 
@@ -72,30 +69,36 @@ sender::~sender() {
       fprintf(stderr, "munmap() failed!\n");
       abort();
     }
+    if (close(socket_fd)) {
+      perror("close() failed");
+      abort();
+    }
   }
 }
 
-sender::sender(const sender &t) : shared_mem(t.shared_mem) {
+channel::channel(const channel &t) : shared_mem(t.shared_mem) {
   socket_fd = t.socket_fd;
   ref_cnt = t.ref_cnt;
   local_ref_cnt = t.local_ref_cnt;
+  fork_shared_mem = t.fork_shared_mem;
 
   // increment reference counters
   ref_cnt->fetch_add(1);
   local_ref_cnt->fetch_add(1);
 }
 
-sender::sender(sender &&t) noexcept : shared_mem(std::move(t.shared_mem)) {
+channel::channel(channel &&t) noexcept : shared_mem(std::move(t.shared_mem)) {
   socket_fd = t.socket_fd;
   ref_cnt = t.ref_cnt;
   local_ref_cnt = t.local_ref_cnt;
+  fork_shared_mem = t.fork_shared_mem;
 
   // increment reference counters
   ref_cnt->fetch_add(1);
   local_ref_cnt->fetch_add(1);
 }
 
-void sender::send_bytes(const void *bytes, const size_t len) {
+void channel::send_bytes(const void *bytes, const size_t len) {
   if (len <= MAX_SOCK_MSG_SIZE) {
     // for small messages, just send them through sockets
     ssize_t result = send(socket_fd, bytes, len, 0);
@@ -112,7 +115,7 @@ void sender::send_bytes(const void *bytes, const size_t len) {
   }
 }
 
-void sender::send_pyobj(const py::object &obj) {
+void channel::send_pyobj(const py::object &obj) {
   py::object dumps = py::module::import("pickle").attr("dumps");
 
   // serialize obj to binary and get output
@@ -125,53 +128,7 @@ void sender::send_pyobj(const py::object &obj) {
   send_bytes(buf->buf, buf->len);              // output
 }
 
-void sender::fork() {
-  ref_cnt->fetch_add(*local_ref_cnt);
-  shared_mem.fork();
-}
-
-receiver::~receiver() {
-  uint32_t global_cnt = ref_cnt->fetch_sub(1) - 1;
-  uint32_t local_cnt = local_ref_cnt->fetch_sub(1) - 1;
-
-  if (local_cnt == 0) {
-    if (close(socket_fd)) {
-      perror("close() failed");
-      abort();
-    }
-    free(local_ref_cnt);
-  }
-
-  if ((local_cnt == 0) && (global_cnt == 0)) {
-    if (munmap(ref_cnt, sizeof(std::atomic_uint32_t))) {
-      fprintf(stderr, "munmap() failed!\n");
-      abort();
-    }
-  }
-}
-
-receiver::receiver(const receiver &t) : shared_mem(t.shared_mem) {
-  socket_fd = t.socket_fd;
-  ref_cnt = t.ref_cnt;
-  local_ref_cnt = t.local_ref_cnt;
-
-  // increment reference counters
-  ref_cnt->fetch_add(1);
-  local_ref_cnt->fetch_add(1);
-}
-
-receiver::receiver(receiver &&t) noexcept
-    : shared_mem(std::move(t.shared_mem)) {
-  socket_fd = t.socket_fd;
-  ref_cnt = t.ref_cnt;
-  local_ref_cnt = t.local_ref_cnt;
-
-  // increment reference counters
-  ref_cnt->fetch_add(1);
-  local_ref_cnt->fetch_add(1);
-}
-
-buffer receiver::receive_bytes(const size_t len) {
+buffer channel::receive_bytes(const size_t len) {
   buffer bytes = buffer(len, buffer_type::MALLOC);
   char *buf = static_cast<char *>(bytes.get_ptr());
 
@@ -194,7 +151,7 @@ buffer receiver::receive_bytes(const size_t len) {
   return bytes;
 }
 
-py::object receiver::receive_pyobj() {
+py::object channel::receive_pyobj() {
   py::object loads = py::module::import("pickle").attr("loads");
 
   // receive input size
@@ -210,9 +167,10 @@ py::object receiver::receive_pyobj() {
   return obj;
 }
 
-void receiver::fork() {
+void channel::fork() {
   ref_cnt->fetch_add(*local_ref_cnt);
-  shared_mem.fork();
+  if (fork_shared_mem) // avoid double forking
+    shared_mem.fork();
 }
 
 } // namespace snakefish

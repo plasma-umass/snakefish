@@ -1,8 +1,6 @@
 #ifndef SNAKEFISH_SHARED_BUFFER_TESTS_H
 #define SNAKEFISH_SHARED_BUFFER_TESTS_H
 
-#include <thread>
-
 #include <gtest/gtest.h>
 
 #include "shared_buffer.h"
@@ -352,21 +350,6 @@ TEST(SharedBufferTest, IpcReadWrite) {
     shared_buf.~shared_buffer_test();
     exit(0);
   } else if (result > 0) {
-    // sleep for 100 ms so the write can complete
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    // parent reads
-    buffer read_bytes = buffer(capacity, buffer_type::MALLOC);
-    shared_buf.read(read_bytes.get_ptr(), capacity);
-    ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), capacity), 0);
-    ASSERT_NE(shared_buf.shared_mem, nullptr);
-    ASSERT_EQ(*shared_buf.ref_cnt, 1);
-    ASSERT_EQ(*shared_buf.local_ref_cnt, 1);
-    ASSERT_EQ(*shared_buf.start, 0);
-    ASSERT_EQ(*shared_buf.end, 0);
-    ASSERT_EQ(*shared_buf.full, false);
-    ASSERT_EQ(shared_buf.capacity, capacity);
-
     // check child status
     int status = 0;
     if (waitpid(result, &status, 0) == -1) {
@@ -377,7 +360,9 @@ TEST(SharedBufferTest, IpcReadWrite) {
       ASSERT_EQ(WEXITSTATUS(status), 0);
     }
 
-    // check again after child exits
+    // parent reads
+    buffer read_bytes = buffer(capacity, buffer_type::MALLOC);
+    shared_buf.read(read_bytes.get_ptr(), capacity);
     ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), capacity), 0);
     ASSERT_NE(shared_buf.shared_mem, nullptr);
     ASSERT_EQ(*shared_buf.ref_cnt, 1);

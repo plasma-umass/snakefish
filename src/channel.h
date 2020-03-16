@@ -24,10 +24,15 @@ static const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
 class receiver; // forward declaration to solve circular dependency
 
 /**
- * \brief The sending part of an IPC channel.
+ * \brief The sending part of an IPC channel, with (semi-automatic) reference
+ * counting support.
  *
  * Note that the `send_*()` functions do not protect against concurrent
  * accesses.
+ *
+ * The support for reference counting is "semi-automatic" in the sense that
+ * the `sender::fork()` function must be called right before calling
+ * the system `fork()`.
  */
 class sender {
 public:
@@ -37,18 +42,14 @@ public:
   sender() = delete;
 
   /**
-   * \brief Default destructor that does nothing.
-   *
-   * Since a `sender` is used for IPC, any resources held by it should
-   * only be released by the last owning process. That process should
-   * call the `dispose()` function.
+   * \brief Destructor implementing reference counting.
    */
-  ~sender() = default;
+  ~sender();
 
   /**
-   * \brief No copy constructor.
+   * \brief Copy constructor implementing reference counting.
    */
-  sender(const sender &t) = delete;
+  sender(const sender &t);
 
   /**
    * \brief No copy assignment operator.
@@ -56,9 +57,9 @@ public:
   sender &operator=(const sender &t) = delete;
 
   /**
-   * \brief Default move constructor.
+   * \brief Move constructor implementing reference counting.
    */
-  sender(sender &&t) = default;
+  sender(sender &&t) noexcept;
 
   /**
    * \brief No move assignment operator.
@@ -94,26 +95,36 @@ public:
   void send_pyobj(const py::object &obj);
 
   /**
-   * \brief Release resources held by this `sender`.
+   * Called by the client to indicate that this `sender` is about to be
+   * shared with another process.
    */
-  void dispose();
+  void fork();
 
 private:
   /**
    * \brief Private constructor to be used by the friend functions.
    */
-  explicit sender(int socket_fd, shared_buffer shared_mem)
-      : socket_fd(socket_fd), shared_mem(std::move(shared_mem)) {}
+  sender(int socket_fd, shared_buffer shared_mem, std::atomic_uint32_t *ref_cnt,
+         std::atomic_uint32_t *local_ref_cnt)
+      : socket_fd(socket_fd), shared_mem(std::move(shared_mem)),
+        ref_cnt(ref_cnt), local_ref_cnt(local_ref_cnt) {}
 
   int socket_fd;
-  shared_buffer shared_mem; // buffer used to hold large messages
+  shared_buffer shared_mem;            // buffer used to hold large messages
+  std::atomic_uint32_t *ref_cnt;       // global reference counter
+  std::atomic_uint32_t *local_ref_cnt; // process local reference counter
 };
 
 /**
- * \brief The receiving part of an IPC channel.
+ * \brief The receiving part of an IPC channel, with (semi-automatic) reference
+ * counting support.
  *
  * Note that the `receive_*()` functions do not protect against concurrent
  * accesses.
+ *
+ * The support for reference counting is "semi-automatic" in the sense that
+ * the `receiver::fork()` function must be called right before calling
+ * the system `fork()`.
  */
 class receiver {
 public:
@@ -123,18 +134,14 @@ public:
   receiver() = delete;
 
   /**
-   * \brief Default destructor that does nothing.
-   *
-   * Since a `receiver` is used for IPC, any resources held by it should
-   * only be released by the last involved process. That process should
-   * call the `dispose()` function.
+   * \brief Destructor implementing reference counting.
    */
-  ~receiver() = default;
+  ~receiver();
 
   /**
-   * \brief No copy constructor.
+   * \brief Copy constructor implementing reference counting.
    */
-  receiver(const receiver &t) = delete;
+  receiver(const receiver &t);
 
   /**
    * \brief No copy assignment operator.
@@ -142,9 +149,9 @@ public:
   receiver &operator=(const receiver &t) = delete;
 
   /**
-   * \brief Default move constructor.
+   * \brief Move constructor implementing reference counting.
    */
-  receiver(receiver &&t) = default;
+  receiver(receiver &&t) noexcept;
 
   /**
    * \brief No move assignment operator.
@@ -180,19 +187,24 @@ public:
   py::object receive_pyobj();
 
   /**
-   * \brief Release resources held by this `receiver`.
+   * Called by the client to indicate that this `receiver` is about to be
+   * shared with another process.
    */
-  void dispose();
+  void fork();
 
 private:
   /**
    * \brief Private constructor to be used by the friend functions.
    */
-  explicit receiver(int socket_fd, shared_buffer shared_mem)
-      : socket_fd(socket_fd), shared_mem(std::move(shared_mem)) {}
+  receiver(int socket_fd, shared_buffer shared_mem,
+           std::atomic_uint32_t *ref_cnt, std::atomic_uint32_t *local_ref_cnt)
+      : socket_fd(socket_fd), shared_mem(std::move(shared_mem)),
+        ref_cnt(ref_cnt), local_ref_cnt(local_ref_cnt) {}
 
   int socket_fd;
-  shared_buffer shared_mem; // buffer used to hold large messages
+  shared_buffer shared_mem;            // buffer used to hold large messages
+  std::atomic_uint32_t *ref_cnt;       // global reference counter
+  std::atomic_uint32_t *local_ref_cnt; // process local reference counter
 };
 
 /**

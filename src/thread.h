@@ -26,6 +26,11 @@ public:
   thread() = delete;
 
   /**
+   * \brief Default destructor.
+   */
+  ~thread() = default;
+
+  /**
    * \brief No copy constructor.
    */
   thread(const thread &t) = delete;
@@ -66,11 +71,6 @@ public:
       : is_parent(false), child_pid(0), started(false), alive(false),
         child_status(0), func(std::move(f)), extract_func(std::move(extract)),
         merge_func(std::move(merge)), channel(sync_channel()) {}
-
-  /**
-   * \brief Destructor.
-   */
-  ~thread();
 
   /**
    * \brief Start executing this thread. In other words, start executing the

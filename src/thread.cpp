@@ -2,15 +2,6 @@
 
 namespace snakefish {
 
-thread::~thread() {
-  if (is_parent) {
-    std::get<0>(channel).dispose();
-    std::get<1>(channel).dispose();
-    std::get<2>(channel).dispose();
-    std::get<3>(channel).dispose();
-  }
-}
-
 void thread::start() {
   if (started) {
     throw std::runtime_error("this thread has already been started");

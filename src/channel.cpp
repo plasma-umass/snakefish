@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "channel.h"
+#include "util.h"
 
 namespace snakefish {
 
@@ -38,8 +39,60 @@ sync_channel(const size_t channel_size) {
   // create shared buffer
   shared_buffer shared_mem(channel_size);
 
-  return {sender(socket_fd[0], shared_mem), receiver(socket_fd[0], shared_mem),
-          sender(socket_fd[1], shared_mem), receiver(socket_fd[1], shared_mem)};
+  // create and initialize metadata variables
+  auto ref_cnt = static_cast<std::atomic_uint32_t *>(
+      get_shared_mem(sizeof(std::atomic_uint32_t), true));
+  auto local_ref_cnt =
+      static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
+  auto local_ref_cnt2 =
+      static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
+  *ref_cnt = 4;
+  *local_ref_cnt = 2;
+  *local_ref_cnt2 = 2;
+
+  return {sender(socket_fd[0], shared_mem, ref_cnt, local_ref_cnt),
+          receiver(socket_fd[0], shared_mem, ref_cnt, local_ref_cnt),
+          sender(socket_fd[1], shared_mem, ref_cnt, local_ref_cnt2),
+          receiver(socket_fd[1], shared_mem, ref_cnt, local_ref_cnt2)};
+}
+
+// Currently, a sender holds the same socket fd as its
+// corresponding receiver. As such, it makes sense
+// for the receiver to close() the socket fd
+sender::~sender() {
+  uint32_t global_cnt = ref_cnt->fetch_sub(1) - 1;
+  uint32_t local_cnt = local_ref_cnt->fetch_sub(1) - 1;
+
+  if (local_cnt == 0) {
+    free(local_ref_cnt);
+  }
+
+  if ((local_cnt == 0) && (global_cnt == 0)) {
+    if (munmap(ref_cnt, sizeof(std::atomic_uint32_t))) {
+      fprintf(stderr, "munmap() failed!\n");
+      abort();
+    }
+  }
+}
+
+sender::sender(const sender &t) : shared_mem(t.shared_mem) {
+  socket_fd = t.socket_fd;
+  ref_cnt = t.ref_cnt;
+  local_ref_cnt = t.local_ref_cnt;
+
+  // increment reference counters
+  ref_cnt->fetch_add(1);
+  local_ref_cnt->fetch_add(1);
+}
+
+sender::sender(sender &&t) noexcept : shared_mem(std::move(t.shared_mem)) {
+  socket_fd = t.socket_fd;
+  ref_cnt = t.ref_cnt;
+  local_ref_cnt = t.local_ref_cnt;
+
+  // increment reference counters
+  ref_cnt->fetch_add(1);
+  local_ref_cnt->fetch_add(1);
 }
 
 void sender::send_bytes(const void *bytes, const size_t len) {
@@ -72,13 +125,50 @@ void sender::send_pyobj(const py::object &obj) {
   send_bytes(buf->buf, buf->len);              // output
 }
 
-void sender::dispose() {
-  // Currently, a sender holds the same socket fd as its
-  // corresponding receiver. As such, it makes sense
-  // for the receiver to close() the socket fd, and the
-  // sender's dispose() should just be a no-op.
-  //
-  (void)(this);
+void sender::fork() {
+  ref_cnt->fetch_add(*local_ref_cnt);
+  shared_mem.fork();
+}
+
+receiver::~receiver() {
+  uint32_t global_cnt = ref_cnt->fetch_sub(1) - 1;
+  uint32_t local_cnt = local_ref_cnt->fetch_sub(1) - 1;
+
+  if (local_cnt == 0) {
+    if (close(socket_fd)) {
+      perror("close() failed");
+      abort();
+    }
+    free(local_ref_cnt);
+  }
+
+  if ((local_cnt == 0) && (global_cnt == 0)) {
+    if (munmap(ref_cnt, sizeof(std::atomic_uint32_t))) {
+      fprintf(stderr, "munmap() failed!\n");
+      abort();
+    }
+  }
+}
+
+receiver::receiver(const receiver &t) : shared_mem(t.shared_mem) {
+  socket_fd = t.socket_fd;
+  ref_cnt = t.ref_cnt;
+  local_ref_cnt = t.local_ref_cnt;
+
+  // increment reference counters
+  ref_cnt->fetch_add(1);
+  local_ref_cnt->fetch_add(1);
+}
+
+receiver::receiver(receiver &&t) noexcept
+    : shared_mem(std::move(t.shared_mem)) {
+  socket_fd = t.socket_fd;
+  ref_cnt = t.ref_cnt;
+  local_ref_cnt = t.local_ref_cnt;
+
+  // increment reference counters
+  ref_cnt->fetch_add(1);
+  local_ref_cnt->fetch_add(1);
 }
 
 buffer receiver::receive_bytes(const size_t len) {
@@ -120,11 +210,9 @@ py::object receiver::receive_pyobj() {
   return obj;
 }
 
-void receiver::dispose() {
-  if (close(socket_fd)) {
-    perror("close() failed");
-    throw std::runtime_error("close() failed");
-  }
+void receiver::fork() {
+  ref_cnt->fetch_add(*local_ref_cnt);
+  shared_mem.fork();
 }
 
 } // namespace snakefish

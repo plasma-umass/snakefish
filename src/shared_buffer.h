@@ -72,14 +72,45 @@ public:
   void fork();
 
 protected:
-  void *shared_mem;                    // shared memory, used as a ring buffer
-  std::atomic_uint32_t *ref_cnt;       // global reference counter
-  std::atomic_uint32_t *local_ref_cnt; // process local reference counter
-  std::atomic_flag *lock;              // "mutex" for the shared memory
-  size_t *start;                       // index of first used byte
-  size_t *end;                         // index of first unused byte
-  bool *full;                          // is the buffer full
-  size_t capacity;                     // max # of bytes this buffer can hold
+  /**
+   * \brief Shared memory, used as a ring buffer.
+   */
+  void *shared_mem;
+
+  /**
+   * \brief Global/interprocess reference counter.
+   */
+  std::atomic_uint32_t *ref_cnt;
+
+  /**
+   * \brief Process local reference counter.
+   */
+  std::atomic_uint32_t *local_ref_cnt;
+
+  /**
+   * \brief "Mutex" for the shared memory.
+   */
+  std::atomic_flag *lock;
+
+  /**
+   * \brief Index of first used byte.
+   */
+  size_t *start;
+
+  /**
+   * \brief Index of first unused byte.
+   */
+  size_t *end;
+
+  /**
+   * \brief A flag indicating whether this buffer is full.
+   */
+  bool *full;
+
+  /**
+   * \brief Number of bytes this buffer can hold.
+   */
+  size_t capacity;
 };
 
 } // namespace snakefish

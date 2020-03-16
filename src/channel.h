@@ -132,11 +132,31 @@ protected:
         ref_cnt(ref_cnt), local_ref_cnt(local_ref_cnt),
         fork_shared_mem(fork_shared_mem) {}
 
-  int socket_fd;                       // unix domain socket file descriptor
-  shared_buffer shared_mem;            // buffer used to hold large messages
-  std::atomic_uint32_t *ref_cnt;       // global reference counter
-  std::atomic_uint32_t *local_ref_cnt; // process local reference counter
-  bool fork_shared_mem; // should this channel fork its shared_buffer?
+  /**
+   * \brief Unix domain socket file descriptor. Used to send small messages.
+   */
+  int socket_fd;
+
+  /**
+   * \brief The buffer used to hold large messages.
+   */
+  shared_buffer shared_mem;
+
+  /**
+   * \brief Global/interprocess reference counter.
+   */
+  std::atomic_uint32_t *ref_cnt;
+
+  /**
+   * \brief Process local reference counter.
+   */
+  std::atomic_uint32_t *local_ref_cnt;
+
+  /**
+   * \brief A flag indicating whether this channel should fork its
+   * `shared_buffer`.
+   */
+  bool fork_shared_mem;
 };
 
 /**

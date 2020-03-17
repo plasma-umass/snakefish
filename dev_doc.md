@@ -9,10 +9,10 @@ Below are some information for SnakeFish developers.
 ## Directory Structure
 ```
 .
+├── examples [Python scripts explaining usage]
 └── src [C++ source code]
     ├── snakefish [Python source code]
     └── tests [C++ unit tests]
-
 ```
 
 ## How to Build & Run Tests
@@ -43,4 +43,4 @@ Below are some information for SnakeFish developers.
 - benchmarks & performance measurements
 
 ## Last Updated
-2020-03-14 ff5b3b2ce0aa4d224fc1fae5747c3d4b9a53e602
+2020-03-16 f75638cdaf8a4d13d7afbaa97d30e0039cef9039

@@ -27,6 +27,8 @@ Finally, since SnakeFish works independently of the Python interpreter, you may 
 1. Place the built `.so` file in a directory that's on your `PYTHONPATH`.
 2. `import csnakefish` in your Python code to import the extension module.
 
+**NOTE**: You can find some examples [here](examples).
+
 ## How to View Documentation
 1. Install [Doxygen](http://doxygen.nl/) and [Graphviz](https://graphviz.org/).
 2. Run `doxygen Doxyfile` in the repo root.
@@ -38,4 +40,4 @@ Finally, since SnakeFish works independently of the Python interpreter, you may 
 See the [development documentation](dev_doc.md).
 
 ## Last Updated
-2020-03-14 ff5b3b2ce0aa4d224fc1fae5747c3d4b9a53e602
+2020-03-16 f75638cdaf8a4d13d7afbaa97d30e0039cef9039

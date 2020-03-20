@@ -1,4 +1,0 @@
-1565710940
-Running  closest pair with  64 threads on  10 loops.
-Running  max subarray sum with  64 threads on  10 loops.
-Running  edge detection with  64 threads on  10 loops.

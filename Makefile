@@ -1,20 +1,20 @@
+.PHONY: snakefish pybind11 dev_dependency
 
-
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-ABS_PATH := $(shell dirname $(mkfile_path))
-
-build:: pybind11 pip
+snakefish: pybind11
+	$(MAKE) -C src
 
 pybind11:
-	@mkdir -p $(ABS_PATH)/src/lib $(ABS_PATH)/src/include && \
-	mkdir -p $(ABS_PATH)/temp && cd $(ABS_PATH)/temp && \
+	@mkdir -p include && \
+	mkdir -p temp && \
+	cd temp && \
 	git clone --recursive 'https://github.com/pybind/pybind11.git' && \
-	cd pybind11 && cp -r ./include/* ../../src/include/ && \
-	cd $(ABS_PATH) && rm -rf $(ABS_PATH)/temp
+	cd pybind11 && \
+	cp -r ./include/* ../../include/ && \
+	cd ../.. && \
+	rm -rf temp
 
-pip:
-	pip3 install --user pybind11
-	pip3 install --user wrapt
-	pip3 install --user numpy
-	pip3 install --user numexpr
-	pip3 install --user OpenCV-python
+# dependencies to build tests
+dev_dependency:
+	@rm -rf pybind11 googletest
+	@git clone --recursive 'https://github.com/pybind/pybind11.git'
+	@git clone --recursive 'https://github.com/google/googletest.git'

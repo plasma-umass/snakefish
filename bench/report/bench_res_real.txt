@@ -1,8 +1,0 @@
-series, label, name, thread_count, size, loops, snake_fish_time, normal_time
-1565743371, bm regex dna, bm regex dna h, 64, Large Input, 10, 8.3747, 68.6758
-1565710940, closest pair, closest_pair h, 64, Large Input, 10, 6.7965, 165.0936
-1565710940, max sub array, max sub array h, 64, Large Input, 10, 2.4022, 24.0901
-1565632128, vector sum, sum h, 64, Large Input, 10, 71.4827, 50.6877
-1565632128, floating point ops, flt h, 64, Large Input, 10, 34.7036, 58.6036
-1565632128, matrix ops, matrix h, 64, Large Input, 10, 213.847, 1448.3506
-1565632128, vector mult, vml h, 64, Large Input, 10, 628.8406, 855.176

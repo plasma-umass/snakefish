@@ -1,4 +1,0 @@
-series, label,size,  name, thread_count, loops, snake_fish_time, normal_time
-0, "128 elements", 128, matmul, 16, 3, 0.18518681266666667, 2.1897194386666667
-0, "256 elements", 256, matmul, 16, 3, 1.368118195, 17.489407224
-0, "512 elements", 512, matmul, 16, 3, 10.577876649666667, 140.62046751166667

@@ -13,11 +13,11 @@
 
 namespace snakefish {
 
-std::pair<channel, channel> sync_channel() {
-  return sync_channel(DEFAULT_CHANNEL_SIZE);
+std::pair<channel, channel> create_channel() {
+  return create_channel(DEFAULT_CHANNEL_SIZE);
 }
 
-std::pair<channel, channel> sync_channel(const size_t channel_size) {
+std::pair<channel, channel> create_channel(const size_t channel_size) {
   // open unix domain sockets
   int socket_fd[2];
   if (socketpair(AF_UNIX, SOCK_DGRAM, 0, socket_fd)) {

@@ -69,7 +69,7 @@ public:
    *
    * \returns A pair of `channel`. One for each communicating party.
    */
-  friend std::pair<channel, channel> sync_channel(size_t buffer_size);
+  friend std::pair<channel, channel> create_channel(size_t buffer_size);
 
   /**
    * \brief Send some bytes.
@@ -164,7 +164,7 @@ protected:
  *
  * \returns A pair of `channel`. One for each communicating party.
  */
-std::pair<channel, channel> sync_channel();
+std::pair<channel, channel> create_channel();
 
 /**
  * \brief Create a pair of `channel` with buffer size `buffer_size`.
@@ -174,7 +174,7 @@ std::pair<channel, channel> sync_channel();
  *
  * \returns A pair of `channel`. One for each communicating party.
  */
-std::pair<channel, channel> sync_channel(size_t buffer_size);
+std::pair<channel, channel> create_channel(size_t buffer_size);
 
 } // namespace snakefish
 

@@ -70,7 +70,7 @@ public:
   thread(py::function f, py::function extract, py::function merge)
       : is_parent(false), child_pid(0), started(false), alive(false),
         child_status(0), func(std::move(f)), extract_func(std::move(extract)),
-        merge_func(std::move(merge)), channels(sync_channel()) {}
+        merge_func(std::move(merge)), channels(create_channel()) {}
 
   /**
    * \brief Start executing this thread. In other words, start executing the

@@ -25,11 +25,11 @@ public:
   using channel::channel;
 
   friend std::pair<channel_test, channel_test>
-  sync_channel_test(size_t channel_size);
+  create_channel_test(size_t channel_size);
 };
 
 std::pair<channel_test, channel_test>
-sync_channel_test(const size_t channel_size) {
+create_channel_test(const size_t channel_size) {
   // open unix domain sockets
   int socket_fd[2];
   if (socketpair(AF_UNIX, SOCK_DGRAM, 0, socket_fd)) {
@@ -69,7 +69,7 @@ sync_channel_test(const size_t channel_size) {
 }
 
 TEST(ChannelTest, TransferSmallObj) {
-  std::pair<channel, channel> channels = sync_channel();
+  std::pair<channel, channel> channels = create_channel();
 
   py::object i1 = py::cast(42);
   channels.first.send_pyobj(i1);
@@ -78,7 +78,7 @@ TEST(ChannelTest, TransferSmallObj) {
 }
 
 TEST(ChannelTest, TransferLargeObj) {
-  std::pair<channel, channel> channels = sync_channel();
+  std::pair<channel, channel> channels = create_channel();
 
   py::object i1 = py::eval("[i for i in range(10000)]");
   channels.first.send_pyobj(i1);
@@ -88,7 +88,7 @@ TEST(ChannelTest, TransferLargeObj) {
 }
 
 TEST(ChannelTest, IpcSmallObj) {
-  std::pair<channel, channel> channels = sync_channel();
+  std::pair<channel, channel> channels = create_channel();
 
   channels.first.fork();
   channels.second.fork();
@@ -125,7 +125,7 @@ TEST(ChannelTest, IpcSmallObj) {
 }
 
 TEST(ChannelTest, IpcLargeObj) {
-  std::pair<channel, channel> channels = sync_channel();
+  std::pair<channel, channel> channels = create_channel();
 
   channels.first.fork();
   channels.second.fork();
@@ -164,9 +164,9 @@ TEST(ChannelTest, IpcLargeObj) {
 
 TEST(ChannelTest, MultiProcessSharing) {
   std::pair<channel_test, channel_test> channels =
-      sync_channel_test(1024 * 1024);
+      create_channel_test(1024 * 1024);
   std::pair<channel_test, channel_test> channels2 =
-      sync_channel_test(1024 * 1024);
+      create_channel_test(1024 * 1024);
 
   // parent forks
   channels.first.fork();

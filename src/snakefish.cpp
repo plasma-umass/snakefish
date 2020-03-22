@@ -17,12 +17,12 @@ PYBIND11_MODULE(csnakefish, m) {
       .def("receive_pyobj", &snakefish::channel::receive_pyobj)
       .def("fork", &snakefish::channel::fork);
 
-  m.def("sync_channel",
+  m.def("create_channel",
         (std::pair<snakefish::channel, snakefish::channel>(*)()) &
-            snakefish::sync_channel);
-  m.def("sync_channel",
+            snakefish::create_channel);
+  m.def("create_channel",
         (std::pair<snakefish::channel, snakefish::channel>(*)(size_t)) &
-            snakefish::sync_channel);
+            snakefish::create_channel);
 
   py::register_exception<std::runtime_error>(m, "RuntimeError");
 }

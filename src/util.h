@@ -8,6 +8,8 @@
 
 namespace snakefish {
 
+namespace util {
+
 static void *get_shared_mem(const size_t len, const bool reserve) {
   void *mem;
   if (reserve) {
@@ -25,6 +27,8 @@ static void *get_shared_mem(const size_t len, const bool reserve) {
     return mem;
   }
 }
+
+} // namespace util
 
 } // namespace snakefish
 

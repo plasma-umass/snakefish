@@ -52,11 +52,11 @@ sync_channel_test(const size_t channel_size) {
 
   // create and initialize metadata variables
   auto ref_cnt = static_cast<std::atomic_uint32_t *>(
-      get_shared_mem(sizeof(std::atomic_uint32_t), true));
+      util::get_shared_mem(sizeof(std::atomic_uint32_t), true));
   auto local_ref_cnt =
       static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
   auto ref_cnt2 = static_cast<std::atomic_uint32_t *>(
-      get_shared_mem(sizeof(std::atomic_uint32_t), true));
+      util::get_shared_mem(sizeof(std::atomic_uint32_t), true));
   auto local_ref_cnt2 =
       static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
   *ref_cnt = 1;

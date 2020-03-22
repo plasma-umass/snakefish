@@ -75,16 +75,16 @@ shared_buffer::shared_buffer(shared_buffer &&t) noexcept {
 
 shared_buffer::shared_buffer(const size_t len) : capacity(len) {
   // create shared memory and relevant metadata variables
-  shared_mem = get_shared_mem(len, false);
+  shared_mem = util::get_shared_mem(len, false);
   ref_cnt = static_cast<std::atomic_uint32_t *>(
-      get_shared_mem(sizeof(std::atomic_uint32_t), true));
+      util::get_shared_mem(sizeof(std::atomic_uint32_t), true));
   local_ref_cnt =
       static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
   lock = static_cast<std::atomic_flag *>(
-      get_shared_mem(sizeof(std::atomic_flag), true));
-  start = static_cast<size_t *>(get_shared_mem(sizeof(size_t), true));
-  end = static_cast<size_t *>(get_shared_mem(sizeof(size_t), true));
-  full = static_cast<bool *>(get_shared_mem(sizeof(bool), true));
+      util::get_shared_mem(sizeof(std::atomic_flag), true));
+  start = static_cast<size_t *>(util::get_shared_mem(sizeof(size_t), true));
+  end = static_cast<size_t *>(util::get_shared_mem(sizeof(size_t), true));
+  full = static_cast<bool *>(util::get_shared_mem(sizeof(bool), true));
 
   // initialize metadata
   new (lock) std::atomic_flag;

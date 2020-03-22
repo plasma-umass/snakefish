@@ -68,6 +68,9 @@ public:
    * shared memory.
    *
    * \returns A pair of `channel`. One for each communicating party.
+   *
+   * \throws e Throws `std::runtime_error` if socket creation failed. Throws
+   * `std::bad_alloc` if `mmap()` failed.
    */
   friend std::pair<channel, channel> create_channel(size_t buffer_size);
 
@@ -104,7 +107,8 @@ public:
    *
    * \throws e Throws `std::out_of_range` if the underlying buffer does not
    * have enough content to accommodate the request. Throws `std::runtime_error`
-   * if some socket error occurred.
+   * if some socket error occurred. Throws `std::bad_alloc` if `malloc()`
+   * failed.
    */
   buffer receive_bytes(size_t len);
 
@@ -113,7 +117,8 @@ public:
    *
    * This function will receive some bytes and deserialize them using `pickle`.
    *
-   * \throws e Throws `std::runtime_error` if some socket error occurred.
+   * \throws e Throws `std::runtime_error` if some socket error occurred. Throws
+   * `std::bad_alloc` if `malloc()` failed.
    */
   py::object receive_pyobj();
 

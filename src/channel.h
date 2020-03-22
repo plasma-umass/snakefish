@@ -78,7 +78,8 @@ public:
    * \param len Number of bytes to send.
    *
    * \throws e Throws `std::runtime_error` if the underlying buffer does not
-   * have enough space to accommodate the request.
+   * have enough space to accommodate the request OR if some socket error
+   * occurred.
    */
   void send_bytes(const void *bytes, size_t len);
 
@@ -89,7 +90,8 @@ public:
    * output.
    *
    * \throws e Throws `std::runtime_error` if the underlying buffer does not
-   * have enough space to accommodate the request.
+   * have enough space to accommodate the request OR if some socket error
+   * occurred.
    */
   void send_pyobj(const py::object &obj);
 
@@ -101,7 +103,8 @@ public:
    * \returns The received bytes wrapped in a `buffer`.
    *
    * \throws e Throws `std::runtime_error` if the underlying buffer does not
-   * have enough content to accommodate the request.
+   * have enough content to accommodate the request OR if some socket error
+   * occurred.
    */
   buffer receive_bytes(size_t len);
 
@@ -110,8 +113,7 @@ public:
    *
    * This function will receive some bytes and deserialize them using `pickle`.
    *
-   * \throws e Throws `std::runtime_error` if the underlying buffer does not
-   * have enough content to accommodate the request.
+   * \throws e Throws `std::runtime_error` if some socket error occurred.
    */
   py::object receive_pyobj();
 
@@ -163,6 +165,9 @@ protected:
  * \brief Create a pair of `channel` with buffer size `DEFAULT_CHANNEL_SIZE`.
  *
  * \returns A pair of `channel`. One for each communicating party.
+ *
+ * \throws e Throws `std::runtime_error` if socket creation failed. Throws
+ * `std::bad_alloc` if `mmap()` failed.
  */
 std::pair<channel, channel> create_channel();
 
@@ -173,6 +178,9 @@ std::pair<channel, channel> create_channel();
  * shared memory.
  *
  * \returns A pair of `channel`. One for each communicating party.
+ *
+ * \throws e Throws `std::runtime_error` if socket creation failed. Throws
+ * `std::bad_alloc` if `mmap()` failed.
  */
 std::pair<channel, channel> create_channel(size_t buffer_size);
 

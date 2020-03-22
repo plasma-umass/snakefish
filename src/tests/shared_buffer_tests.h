@@ -204,7 +204,7 @@ TEST(SharedBufferTest, WriteOverflow) {
   buffer bytes = get_random_bytes(capacity + 1);
   try {
     shared_buf.write(bytes.get_ptr(), capacity + 1);
-  } catch (const std::runtime_error &e) {
+  } catch (const std::overflow_error &e) {
     ASSERT_EQ(std::string(e.what()), "channel buffer is full");
   }
   ASSERT_NE(shared_buf.shared_mem, nullptr);
@@ -241,7 +241,7 @@ TEST(SharedBufferTest, WriteOverflow) {
 
   try {
     shared_buf.write(bytes2.get_ptr(), capacity / 2);
-  } catch (const std::runtime_error &e) {
+  } catch (const std::overflow_error &e) {
     ASSERT_EQ(std::string(e.what()), "channel buffer is full");
   }
   ASSERT_NE(shared_buf.shared_mem, nullptr);
@@ -268,7 +268,7 @@ TEST(SharedBufferTest, ReadOutOfBound) {
   buffer read_bytes = buffer(1, buffer_type::MALLOC);
   try {
     shared_buf.read(read_bytes.get_ptr(), 1);
-  } catch (const std::runtime_error &e) {
+  } catch (const std::out_of_range &e) {
     ASSERT_EQ(std::string(e.what()), "out-of-bounds read detected");
   }
   ASSERT_NE(shared_buf.shared_mem, nullptr);
@@ -306,7 +306,7 @@ TEST(SharedBufferTest, ReadOutOfBound) {
   buffer read_bytes3 = buffer(capacity / 2 + 2, buffer_type::MALLOC);
   try {
     shared_buf.read(read_bytes3.get_ptr(), capacity / 2 + 2);
-  } catch (const std::runtime_error &e) {
+  } catch (const std::out_of_range &e) {
     ASSERT_EQ(std::string(e.what()), "out-of-bounds read detected");
   }
   ASSERT_NE(shared_buf.shared_mem, nullptr);

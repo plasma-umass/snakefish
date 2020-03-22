@@ -77,9 +77,9 @@ public:
    * \param bytes Pointer to the start of the bytes.
    * \param len Number of bytes to send.
    *
-   * \throws e Throws `std::runtime_error` if the underlying buffer does not
-   * have enough space to accommodate the request OR if some socket error
-   * occurred.
+   * \throws e Throws `std::overflow_error` if the underlying buffer does not
+   * have enough space to accommodate the request. Throws `std::runtime_error`
+   * if some socket error occurred.
    */
   void send_bytes(const void *bytes, size_t len);
 
@@ -89,9 +89,9 @@ public:
    * This function will serialize `obj` using `pickle` and send the binary
    * output.
    *
-   * \throws e Throws `std::runtime_error` if the underlying buffer does not
-   * have enough space to accommodate the request OR if some socket error
-   * occurred.
+   * \throws e Throws `std::overflow_error` if the underlying buffer does not
+   * have enough space to accommodate the request. Throws `std::runtime_error`
+   * if some socket error occurred.
    */
   void send_pyobj(const py::object &obj);
 
@@ -102,9 +102,9 @@ public:
    *
    * \returns The received bytes wrapped in a `buffer`.
    *
-   * \throws e Throws `std::runtime_error` if the underlying buffer does not
-   * have enough content to accommodate the request OR if some socket error
-   * occurred.
+   * \throws e Throws `std::out_of_range` if the underlying buffer does not
+   * have enough content to accommodate the request. Throws `std::runtime_error`
+   * if some socket error occurred.
    */
   buffer receive_bytes(size_t len);
 

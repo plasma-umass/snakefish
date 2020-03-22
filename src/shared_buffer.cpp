@@ -122,7 +122,7 @@ void shared_buffer::read(void *buf, const size_t n) {
     available_bytes = capacity;
   if (n > available_bytes) {
     lock->clear();
-    throw std::runtime_error("out-of-bounds read detected");
+    throw std::out_of_range("out-of-bounds read detected");
   }
 
   // copy the message from shared memory
@@ -166,7 +166,7 @@ void shared_buffer::write(const void *buf, const size_t n) {
     available_space = capacity;
   if (n > available_space) {
     lock->clear();
-    throw std::runtime_error("channel buffer is full");
+    throw std::overflow_error("channel buffer is full");
   }
 
   // copy the bytes into shared buffer

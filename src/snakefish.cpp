@@ -15,6 +15,7 @@ PYBIND11_MODULE(csnakefish, m) {
   py::class_<snakefish::channel>(m, "Channel")
       .def("send_pyobj", &snakefish::channel::send_pyobj)
       .def("receive_pyobj", &snakefish::channel::receive_pyobj)
+      .def("try_receive_pyobj", &snakefish::channel::try_receive_pyobj)
       .def("fork", &snakefish::channel::fork);
 
   m.def("create_channel",

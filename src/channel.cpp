@@ -167,6 +167,49 @@ py::object channel::receive_pyobj() {
   return obj;
 }
 
+buffer channel::try_receive_bytes(const size_t len) {
+  buffer bytes = buffer(len, buffer_type::MALLOC);
+  char *buf = static_cast<char *>(bytes.get_ptr());
+
+  if (len <= MAX_SOCK_MSG_SIZE) {
+    // for small messages, just receive them through sockets
+    ssize_t result = recv(socket_fd, buf, len, MSG_DONTWAIT);
+    if (result == -1) {
+      if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+        throw std::out_of_range("out-of-bounds read detected");
+      } else {
+        perror("recv() failed");
+        throw std::runtime_error("recv() failed");
+      }
+    } else if ((size_t)result != len) {
+      fprintf(stderr, "received %ld bytes, should be %ld bytes!\n", result,
+              len);
+      abort();
+    }
+  } else {
+    // for large messages, receive them from shared memory
+    shared_mem.read(buf, len);
+  }
+
+  return bytes;
+}
+
+py::object channel::try_receive_pyobj() {
+  py::object loads = py::module::import("pickle").attr("loads");
+
+  // receive input size
+  buffer size_buf = try_receive_bytes(sizeof(Py_ssize_t));
+  Py_ssize_t size = *static_cast<Py_ssize_t *>(size_buf.get_ptr());
+
+  // receive input
+  buffer bytes_buf = try_receive_bytes(size);
+  py::handle mem_view = py::handle(PyMemoryView_FromMemory(
+      static_cast<char *>(bytes_buf.get_ptr()), size, PyBUF_READ));
+  py::object obj = loads(mem_view);
+
+  return obj;
+}
+
 void channel::fork() {
   ref_cnt->fetch_add(*local_ref_cnt);
   if (fork_shared_mem) // avoid double forking

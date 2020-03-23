@@ -28,6 +28,22 @@ static const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
  * The support for reference counting is "semi-automatic" in the sense that
  * the `channel::fork()` function must be called right before calling
  * the system `fork()`.
+ *
+ * Characteristics of the functions:
+ * - `send_bytes()`: won't block; can throw
+ * - `send_pyobj()`: won't block; can throw
+ * - `receive_bytes()`: won't block for large^ messages; can throw
+ * - `receive_pyobj()`: might block; can throw
+ * - `try_receive_bytes()`: won't block; can throw
+ * - `try_receive_pyobj()`: won't block; can throw
+ *
+ * ^: a "large" message has size larger than `MAX_SOCK_MSG_SIZE`, which
+ * is 1024 bytes at the moment
+ *
+ * **NOTE**: When doing shared memory IO, a lock must be acquired for
+ * synchronization purposes. As such, all functions mentioned above
+ * can technically block on the said lock. The characteristics described
+ * apply when there's no contention.
  */
 class channel {
 public:
@@ -121,6 +137,32 @@ public:
    * `std::bad_alloc` if `malloc()` failed.
    */
   py::object receive_pyobj();
+
+  /**
+   * \brief Non-blocking version of `receive_bytes()`.
+   *
+   * \param len Number of bytes to receive.
+   *
+   * \returns The received bytes wrapped in a `buffer`.
+   *
+   * \throws e Throws `std::out_of_range` if the underlying buffer does not
+   * have enough content to accommodate the request. Throws `std::runtime_error`
+   * if some socket error occurred. Throws `std::bad_alloc` if `malloc()`
+   * failed.
+   */
+  buffer try_receive_bytes(size_t len);
+
+  /**
+   * \brief Non-blocking version of `receive_pyobj()`.
+   *
+   * This function will receive some bytes and deserialize them using `pickle`.
+   *
+   * \throws e Throws `std::out_of_range` if the underlying buffer does not
+   * have enough content to accommodate the request. Throws `std::runtime_error`
+   * if some socket error occurred. Throws `std::bad_alloc` if `malloc()`
+   * failed.
+   */
+  py::object try_receive_pyobj();
 
   /**
    * Called by the client to indicate that this `channel` is about to be

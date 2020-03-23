@@ -99,6 +99,10 @@ channel::channel(channel &&t) noexcept : shared_mem(std::move(t.shared_mem)) {
 }
 
 void channel::send_bytes(const void *bytes, const size_t len) {
+  // no-op
+  if (len == 0)
+    return;
+
   if (len <= MAX_SOCK_MSG_SIZE) {
     // for small messages, just send them through sockets
     ssize_t result = send(socket_fd, bytes, len, 0);

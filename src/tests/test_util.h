@@ -24,9 +24,9 @@ static buffer get_random_bytes(const size_t len) {
   return buf;
 }
 
-static buffer duplicate_bytes(const void *bytes, const size_t len) {
+static buffer duplicate_bytes(void * const bytes, const size_t len) {
   buffer buf = buffer(len, buffer_type::MALLOC);
-  const char *src = static_cast<const char *>(bytes);
+  char *src = static_cast<char *>(bytes);
   char *copy = static_cast<char *>(buf.get_ptr());
 
   for (size_t i = 0; i < len; i++) {

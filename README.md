@@ -36,8 +36,11 @@ Finally, since SnakeFish works independently of the Python interpreter, you may 
 
 **NOTE**: Doc is still WIP at the moment.
 
+## Caveats
+- [fork(2)](http://man7.org/linux/man-pages/man2/fork.2.html): "After a `fork()` in a multithreaded program, the child can safely call only async-signal-safe functions (see [signal-safety(7)](http://man7.org/linux/man-pages/man7/signal-safety.7.html)) until such time as it calls execve(2)." As such, users must ensure that their code, including its imported modules, either doesn't create threads or doesn't call non-async-signal-safe functions (e.g. `malloc()` and `printf()`).
+
 ## Development
 See the [development documentation](dev_doc.md).
 
 ## Last Updated
-2020-03-16 f75638cdaf8a4d13d7afbaa97d30e0039cef9039
+2020-03-22 2cdc313b722fb5cf6e619cde654dfa0729cf20c9

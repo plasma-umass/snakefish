@@ -233,8 +233,7 @@ buffer channel::receive_bytes(const bool block) {
     size_t first_half_len = capacity - head;
     size_t second_half_len = len - first_half_len;
     memcpy(bytes, static_cast<char *>(shared_mem) + head, first_half_len);
-    memcpy(static_cast<char *>(bytes) + first_half_len, shared_mem,
-           second_half_len);
+    memcpy(bytes + first_half_len, shared_mem, second_half_len);
   }
 
   // update metadata

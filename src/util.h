@@ -11,14 +11,14 @@ namespace snakefish {
 
 namespace util {
 
-static uint64_t get_random_uint() {
+static inline uint64_t get_random_uint() {
   static std::random_device rd;
   static std::mt19937 rng(rd());
   static std::uniform_int_distribution<std::mt19937::result_type> dist;
   return dist(rng);
 }
 
-static void *get_mem(const size_t len) {
+static inline void *get_mem(const size_t len) {
   // no-op
   if (len == 0)
     return nullptr;
@@ -32,7 +32,7 @@ static void *get_mem(const size_t len) {
   }
 }
 
-static void *get_shared_mem(const size_t len, const bool reserve) {
+static inline void *get_shared_mem(const size_t len, const bool reserve) {
   // no-op
   if (len == 0)
     return nullptr;

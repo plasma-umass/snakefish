@@ -13,6 +13,7 @@
 namespace py = pybind11;
 
 #include "buffer.h"
+#include "semaphore_t.h"
 
 namespace snakefish {
 
@@ -179,7 +180,7 @@ protected:
   /**
    * \brief Number of unread messages.
    */
-  sem_t *n_unread;
+  semaphore_t n_unread;
 
   /**
    * \brief Number of bytes this buffer can hold.

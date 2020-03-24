@@ -17,6 +17,8 @@ add_library(snakefish SHARED
         src/buffer.h
         src/channel.cpp
         src/channel.h
+        src/semaphore_t.cpp
+        src/semaphore_t.h
         src/snakefish.cpp
         src/snakefish.h
         src/thread.cpp

@@ -9,7 +9,7 @@
 
 namespace snakefish {
 
-channel::channel(const size_t size) : capacity(size) {
+channel::channel(const size_t size) : n_unread(), capacity(size) {
   // create shared memory and relevant metadata variables
   shared_mem = util::get_shared_mem(size, false);
   ref_cnt = static_cast<std::atomic_uint32_t *>(
@@ -21,7 +21,6 @@ channel::channel(const size_t size) : capacity(size) {
   start = static_cast<size_t *>(util::get_shared_mem(sizeof(size_t), true));
   end = static_cast<size_t *>(util::get_shared_mem(sizeof(size_t), true));
   full = static_cast<bool *>(util::get_shared_mem(sizeof(bool), true));
-  n_unread = static_cast<sem_t *>(util::get_shared_mem(sizeof(sem_t), true));
 
   // initialize metadata
   new (lock) std::atomic_flag;
@@ -30,11 +29,6 @@ channel::channel(const size_t size) : capacity(size) {
   *start = 0;
   *end = 0;
   *full = false;
-
-  if (sem_init(n_unread, 1, 0)) {
-    perror("sem_init() failed");
-    throw std::runtime_error("sem_init() failed");
-  }
 
   // ensure that std::atomic_uint32_t is lock free
   if (!ref_cnt->is_lock_free()) {
@@ -76,18 +70,15 @@ channel::~channel() {
       perror("munmap() failed");
       abort();
     }
-    if (sem_destroy(n_unread)) {
-      perror("sem_destroy() failed");
-      abort();
-    }
-    if (munmap(n_unread, sizeof(sem_t))) {
-      perror("munmap() failed");
+    try {
+      n_unread.destroy();
+    } catch (...) {
       abort();
     }
   }
 }
 
-channel::channel(const channel &t) {
+channel::channel(const channel &t) : n_unread(t.n_unread) {
   shared_mem = t.shared_mem;
   ref_cnt = t.ref_cnt;
   local_ref_cnt = t.local_ref_cnt;
@@ -95,7 +86,6 @@ channel::channel(const channel &t) {
   start = t.start;
   end = t.end;
   full = t.full;
-  n_unread = t.n_unread;
   capacity = t.capacity;
 
   // increment reference counters
@@ -103,7 +93,7 @@ channel::channel(const channel &t) {
   local_ref_cnt->fetch_add(1);
 }
 
-channel::channel(channel &&t) noexcept {
+channel::channel(channel &&t) noexcept : n_unread(std::move(t.n_unread)) {
   shared_mem = t.shared_mem;
   ref_cnt = t.ref_cnt;
   local_ref_cnt = t.local_ref_cnt;
@@ -111,7 +101,6 @@ channel::channel(channel &&t) noexcept {
   start = t.start;
   end = t.end;
   full = t.full;
-  n_unread = t.n_unread;
   capacity = t.capacity;
 
   // increment reference counters
@@ -178,10 +167,11 @@ void channel::send_bytes(void *bytes, size_t len) {
     *full = true;
   *end = new_end;
 
-  if (sem_post(n_unread)) {
+  try {
+    n_unread.post();
+  } catch (const std::runtime_error &e) {
     release_lock();
-    perror("sem_post() failed");
-    throw std::runtime_error("sem_post() failed");
+    throw e;
   }
 
   release_lock();
@@ -201,18 +191,10 @@ void channel::send_pyobj(const py::object &obj) {
 
 buffer channel::receive_bytes(const bool block) {
   if (block) {
-    if (sem_wait(n_unread)) {
-      perror("sem_wait() failed");
-      throw std::runtime_error("sem_wait() failed");
-    }
+    n_unread.wait();
   } else {
-    if (sem_trywait(n_unread)) {
-      if (errno == EAGAIN) {
-        throw std::out_of_range("out-of-bounds read detected");
-      } else {
-        perror("sem_trywait() failed");
-        throw std::runtime_error("sem_trywait() failed");
-      }
+    if (!n_unread.trywait()) {
+      throw std::out_of_range("out-of-bounds read detected");
     }
   }
   acquire_lock();

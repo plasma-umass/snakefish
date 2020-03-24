@@ -7,9 +7,7 @@ void thread::start() {
     throw std::runtime_error("this thread has already been started");
   }
 
-  channels.first.fork();
-  channels.second.fork();
-
+  channel.fork();
   pid_t pid = fork();
   if (pid > 0) {
     is_parent = true;
@@ -46,8 +44,8 @@ void thread::join() {
     abort();
   } else {
     alive = false;
-    ret_val = get_channel().receive_pyobj();
-    globals = get_channel().receive_pyobj();
+    ret_val = channel.receive_pyobj(true);
+    globals = channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
   }
 }
@@ -72,8 +70,8 @@ bool thread::try_join() {
     abort();
   } else {
     alive = false;
-    ret_val = get_channel().receive_pyobj();
-    globals = get_channel().receive_pyobj();
+    ret_val = channel.receive_pyobj(true);
+    globals = channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
     return true;
   }
@@ -106,17 +104,10 @@ void thread::run() {
   }
 
   ret_val = func();
-  get_channel().send_pyobj(ret_val);
+  channel.send_pyobj(ret_val);
   globals = extract_func(py::globals());
-  get_channel().send_pyobj(globals);
+  channel.send_pyobj(globals);
   exit(0);
-}
-
-channel &thread::get_channel() {
-  if (is_parent)
-    return channels.first;
-  else
-    return channels.second;
 }
 
 } // namespace snakefish

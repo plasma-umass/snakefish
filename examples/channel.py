@@ -3,36 +3,36 @@ from typing import *  # use type hints to make signatures clear
 
 import csnakefish
 
-(sender, receiver) = csnakefish.create_channel()  # create a channel
+channel = csnakefish.Channel()  # create a channel
 
 
 # a function that will be executed on a snakefish thread
 def f1() -> None:
     print("thread #1: sending an object...")
-    sender.send_pyobj([42])
+    channel.send_pyobj([42])
 
     print("thread #1: sleep for 500 ms")
     time.sleep(0.5)
     print("thread #1: sending an object...")
-    sender.send_pyobj({'1': 1})
+    channel.send_pyobj({'1': 1})
 
 
 # a function that will be executed on a snakefish thread
 def f2() -> None:
     print("thread #2: sending an object...")
-    sender.send_pyobj((42,))
+    channel.send_pyobj((42,))
 
 
 # a function that will be executed on a snakefish thread
 def f3() -> None:
     # blocking receive
     print("thread #3: receiving an object...")
-    received = receiver.receive_pyobj()
+    received = channel.receive_pyobj(True)
     print("thread #3: received", received)
 
     # blocking receive
     print("thread #3: receiving an object...")
-    received = receiver.receive_pyobj()
+    received = channel.receive_pyobj(True)
     print("thread #3: received", received)
 
     # non-blocking receive
@@ -40,7 +40,7 @@ def f3() -> None:
     start = time.time()
     while True:
         try:
-            received = receiver.try_receive_pyobj()
+            received = channel.receive_pyobj(False)
             break
         except IndexError:
             print("thread #3: received nothing, sleep for 100 ms")
@@ -60,16 +60,13 @@ def merge(_old_globals: Dict[str, Any], _new_globals: Dict[str, Any]) -> None:
 
 
 # spawn 3 snakefish threads
-sender.fork()
-receiver.fork()
+channel.fork()
 t1 = csnakefish.Thread(f1, extract, merge)
 
-sender.fork()
-receiver.fork()
+channel.fork()
 t2 = csnakefish.Thread(f2, extract, merge)
 
-sender.fork()
-receiver.fork()
+channel.fork()
 t3 = csnakefish.Thread(f3, extract, merge)
 
 t1.start()

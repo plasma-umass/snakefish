@@ -10,7 +10,25 @@ namespace snakefish {
 
 namespace util {
 
+static void *get_mem(const size_t len) {
+  // no-op
+  if (len == 0)
+    return nullptr;
+
+  void *p = malloc(len);
+  if (p == nullptr) {
+    perror("malloc() failed");
+    throw std::bad_alloc();
+  } else {
+    return p;
+  }
+}
+
 static void *get_shared_mem(const size_t len, const bool reserve) {
+  // no-op
+  if (len == 0)
+    return nullptr;
+
   void *mem;
   if (reserve) {
     mem = mmap(nullptr, len, PROT_READ | PROT_WRITE,

@@ -6,20 +6,18 @@
 #define SNAKEFISH_CHANNEL_H
 
 #include <atomic>
-#include <tuple>
-#include <utility>
+
+#include <semaphore.h>
 
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
 #include "buffer.h"
-#include "shared_buffer.h"
 
 namespace snakefish {
 
-static const unsigned PICKLE_PROTOCOL = 4;
-static const size_t MAX_SOCK_MSG_SIZE = 1024;                          // bytes
-static const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
+const unsigned PICKLE_PROTOCOL = 4;
+const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
 
 /**
  * \brief An IPC channel with built-in synchronization and (semi-automatic)
@@ -32,13 +30,11 @@ static const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
  * Characteristics of the functions:
  * - `send_bytes()`: won't block; can throw
  * - `send_pyobj()`: won't block; can throw
- * - `receive_bytes()`: won't block for large^ messages; can throw
- * - `receive_pyobj()`: might block; can throw
- * - `try_receive_bytes()`: won't block; can throw
- * - `try_receive_pyobj()`: won't block; can throw
+ * - `receive_bytes()`: may or may not block^; can throw
+ * - `receive_pyobj()`: may or may not block^; can throw
  *
- * ^: a "large" message has size larger than `MAX_SOCK_MSG_SIZE`, which
- * is 1024 bytes at the moment
+ * ^: the client must specify whether the function should block when there's no
+ * incoming messages to receive
  *
  * **NOTE**: When doing shared memory IO, a lock must be acquired for
  * synchronization purposes. As such, all functions mentioned above
@@ -48,9 +44,9 @@ static const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
 class channel {
 public:
   /**
-   * \brief No default constructor;
+   * \brief Create a channel with buffer size `DEFAULT_CHANNEL_SIZE`.
    */
-  channel() = delete;
+  channel() : channel(DEFAULT_CHANNEL_SIZE) {}
 
   /**
    * \brief Destructor implementing reference counting.
@@ -78,17 +74,11 @@ public:
   channel &operator=(channel &&t) = delete;
 
   /**
-   * \brief Create a pair of `channel` with buffer size `buffer_size`.
+   * \brief Create a channel with buffer size `size`.
    *
-   * \param buffer_size The size of the channel buffer, which is allocated as
-   * shared memory.
-   *
-   * \returns A pair of `channel`. One for each communicating party.
-   *
-   * \throws e Throws `std::runtime_error` if socket creation failed. Throws
-   * `std::bad_alloc` if `mmap()` failed.
+   * \param size The size of the underlying shared memory buffer.
    */
-  friend std::pair<channel, channel> create_channel(size_t buffer_size);
+  explicit channel(size_t size);
 
   /**
    * \brief Send some bytes.
@@ -96,11 +86,11 @@ public:
    * \param bytes Pointer to the start of the bytes.
    * \param len Number of bytes to send.
    *
-   * \throws e Throws `std::overflow_error` if the underlying buffer does not
-   * have enough space to accommodate the request. Throws `std::runtime_error`
-   * if some socket error occurred.
+   * \throws std::overflow_error If the underlying buffer does not have enough
+   * space to accommodate the request.
+   * \throws std::runtime_error If some semaphore error occurred.
    */
-  void send_bytes(const void *bytes, size_t len);
+  void send_bytes(void *bytes, size_t len);
 
   /**
    * \brief Send a python object.
@@ -108,61 +98,41 @@ public:
    * This function will serialize `obj` using `pickle` and send the binary
    * output.
    *
-   * \throws e Throws `std::overflow_error` if the underlying buffer does not
-   * have enough space to accommodate the request. Throws `std::runtime_error`
-   * if some socket error occurred.
+   * \throws std::overflow_error If the underlying buffer does not have enough
+   * space to accommodate the request.
+   * \throws std::runtime_error If some semaphore error occurred.
    */
   void send_pyobj(const py::object &obj);
 
   /**
    * \brief Receive some bytes.
    *
-   * \param len Number of bytes to receive.
+   * \param block Should this function block?
    *
    * \returns The received bytes wrapped in a `buffer`.
    *
-   * \throws e Throws `std::out_of_range` if the underlying buffer does not
-   * have enough content to accommodate the request. Throws `std::runtime_error`
-   * if some socket error occurred. Throws `std::bad_alloc` if `malloc()`
-   * failed.
+   * \throws std::out_of_range If the underlying buffer does not have enough
+   * content to accommodate the request (this only applies when `block` is
+   * `false`).
+   * \throws std::runtime_error If some semaphore error occurred.
+   * \throws std::bad_alloc If `malloc()` failed.
    */
-  buffer receive_bytes(size_t len);
+  buffer receive_bytes(bool block);
 
   /**
    * \brief Receive a python object.
    *
    * This function will receive some bytes and deserialize them using `pickle`.
    *
-   * \throws e Throws `std::runtime_error` if some socket error occurred. Throws
-   * `std::bad_alloc` if `malloc()` failed.
+   * \param block Should this function block?
+   *
+   * \throws std::out_of_range If the underlying buffer does not have enough
+   * content to accommodate the request (this only applies when `block` is
+   * `false`).
+   * \throws std::runtime_error If some semaphore error occurred.
+   * \throws std::bad_alloc If `malloc()` failed.
    */
-  py::object receive_pyobj();
-
-  /**
-   * \brief Non-blocking version of `receive_bytes()`.
-   *
-   * \param len Number of bytes to receive.
-   *
-   * \returns The received bytes wrapped in a `buffer`.
-   *
-   * \throws e Throws `std::out_of_range` if the underlying buffer does not
-   * have enough content to accommodate the request. Throws `std::runtime_error`
-   * if some socket error occurred. Throws `std::bad_alloc` if `malloc()`
-   * failed.
-   */
-  buffer try_receive_bytes(size_t len);
-
-  /**
-   * \brief Non-blocking version of `receive_pyobj()`.
-   *
-   * This function will receive some bytes and deserialize them using `pickle`.
-   *
-   * \throws e Throws `std::out_of_range` if the underlying buffer does not
-   * have enough content to accommodate the request. Throws `std::runtime_error`
-   * if some socket error occurred. Throws `std::bad_alloc` if `malloc()`
-   * failed.
-   */
-  py::object try_receive_pyobj();
+  py::object receive_pyobj(bool block);
 
   /**
    * Called by the client to indicate that this `channel` is about to be
@@ -172,24 +142,9 @@ public:
 
 protected:
   /**
-   * \brief Private constructor to be used by the friend functions.
+   * \brief The buffer used to hold messages.
    */
-  channel(const int socket_fd, shared_buffer shared_mem,
-          std::atomic_uint32_t *ref_cnt, std::atomic_uint32_t *local_ref_cnt,
-          const bool fork_shared_mem)
-      : socket_fd(socket_fd), shared_mem(std::move(shared_mem)),
-        ref_cnt(ref_cnt), local_ref_cnt(local_ref_cnt),
-        fork_shared_mem(fork_shared_mem) {}
-
-  /**
-   * \brief Unix domain socket file descriptor. Used to send small messages.
-   */
-  int socket_fd;
-
-  /**
-   * \brief The buffer used to hold large messages.
-   */
-  shared_buffer shared_mem;
+  void *shared_mem;
 
   /**
    * \brief Global/interprocess reference counter.
@@ -202,34 +157,49 @@ protected:
   std::atomic_uint32_t *local_ref_cnt;
 
   /**
-   * \brief A flag indicating whether this channel should fork its
-   * `shared_buffer`.
+   * \brief "Mutex" for the shared memory.
    */
-  bool fork_shared_mem;
+  std::atomic_flag *lock;
+
+  /**
+   * \brief Index of first used byte.
+   */
+  size_t *start;
+
+  /**
+   * \brief Index of first unused byte.
+   */
+  size_t *end;
+
+  /**
+   * \brief A flag indicating whether this buffer is full.
+   */
+  bool *full;
+
+  /**
+   * \brief Number of unread messages.
+   */
+  sem_t *n_unread;
+
+  /**
+   * \brief Number of bytes this buffer can hold.
+   */
+  size_t capacity;
+
+private:
+  /**
+   * \brief Acquire `lock`.
+   */
+  void acquire_lock() {
+    while (lock->test_and_set())
+      ;
+  }
+
+  /**
+   * \brief Release `lock`.
+   */
+  void release_lock() { lock->clear(); }
 };
-
-/**
- * \brief Create a pair of `channel` with buffer size `DEFAULT_CHANNEL_SIZE`.
- *
- * \returns A pair of `channel`. One for each communicating party.
- *
- * \throws e Throws `std::runtime_error` if socket creation failed. Throws
- * `std::bad_alloc` if `mmap()` failed.
- */
-std::pair<channel, channel> create_channel();
-
-/**
- * \brief Create a pair of `channel` with buffer size `buffer_size`.
- *
- * \param buffer_size The size of the channel buffer, which is allocated as
- * shared memory.
- *
- * \returns A pair of `channel`. One for each communicating party.
- *
- * \throws e Throws `std::runtime_error` if socket creation failed. Throws
- * `std::bad_alloc` if `mmap()` failed.
- */
-std::pair<channel, channel> create_channel(size_t buffer_size);
 
 } // namespace snakefish
 

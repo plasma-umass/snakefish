@@ -4,56 +4,43 @@
 #include <cstdio>
 #include <stdexcept>
 
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
 #include "channel.h"
 #include "util.h"
 
 namespace snakefish {
 
-std::pair<channel, channel> create_channel() {
-  return create_channel(DEFAULT_CHANNEL_SIZE);
-}
-
-std::pair<channel, channel> create_channel(const size_t channel_size) {
-  // open unix domain sockets
-  int socket_fd[2];
-  if (socketpair(AF_UNIX, SOCK_DGRAM, 0, socket_fd)) {
-    perror("socketpair() failed");
-    throw std::runtime_error("socketpair() failed");
-  }
-
-  // update settings so sockets would close on exec()
-  if (fcntl(socket_fd[0], F_SETFD, FD_CLOEXEC)) {
-    perror("fcntl(FD_CLOEXEC) failed for sender socket");
-    throw std::runtime_error("fcntl(FD_CLOEXEC) failed for sender socket");
-  }
-  if (fcntl(socket_fd[1], F_SETFD, FD_CLOEXEC)) {
-    perror("fcntl(FD_CLOEXEC) failed for receiver socket");
-    throw std::runtime_error("fcntl(FD_CLOEXEC) failed for receiver socket");
-  }
-
-  // create shared buffer
-  shared_buffer shared_mem(channel_size);
-
-  // create and initialize metadata variables
-  auto ref_cnt = static_cast<std::atomic_uint32_t *>(
+channel::channel(const size_t size) : capacity(size) {
+  // create shared memory and relevant metadata variables
+  shared_mem = util::get_shared_mem(size, false);
+  ref_cnt = static_cast<std::atomic_uint32_t *>(
       util::get_shared_mem(sizeof(std::atomic_uint32_t), true));
-  auto local_ref_cnt =
-      static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
-  auto ref_cnt2 = static_cast<std::atomic_uint32_t *>(
-      util::get_shared_mem(sizeof(std::atomic_uint32_t), true));
-  auto local_ref_cnt2 =
-      static_cast<std::atomic_uint32_t *>(malloc(sizeof(std::atomic_uint32_t)));
+  local_ref_cnt = static_cast<std::atomic_uint32_t *>(
+      util::get_mem(sizeof(std::atomic_uint32_t)));
+  lock = static_cast<std::atomic_flag *>(
+      util::get_shared_mem(sizeof(std::atomic_flag), true));
+  start = static_cast<size_t *>(util::get_shared_mem(sizeof(size_t), true));
+  end = static_cast<size_t *>(util::get_shared_mem(sizeof(size_t), true));
+  full = static_cast<bool *>(util::get_shared_mem(sizeof(bool), true));
+  n_unread = static_cast<sem_t *>(util::get_shared_mem(sizeof(sem_t), true));
+
+  // initialize metadata
+  new (lock) std::atomic_flag;
   *ref_cnt = 1;
   *local_ref_cnt = 1;
-  *ref_cnt2 = 1;
-  *local_ref_cnt2 = 1;
+  *start = 0;
+  *end = 0;
+  *full = false;
 
-  return {channel(socket_fd[0], shared_mem, ref_cnt, local_ref_cnt, true),
-          channel(socket_fd[1], shared_mem, ref_cnt2, local_ref_cnt2, false)};
+  if (sem_init(n_unread, 1, 0)) {
+    perror("sem_init() failed");
+    throw std::runtime_error("sem_init() failed");
+  }
+
+  // ensure that std::atomic_uint32_t is lock free
+  if (!ref_cnt->is_lock_free()) {
+    fprintf(stderr, "std::atomic_uint32_t is not lock free!\n");
+    abort();
+  }
 }
 
 channel::~channel() {
@@ -65,58 +52,139 @@ channel::~channel() {
   }
 
   if ((local_cnt == 0) && (global_cnt == 0)) {
-    if (munmap(ref_cnt, sizeof(std::atomic_uint32_t))) {
-      fprintf(stderr, "munmap() failed!\n");
+    if (munmap(shared_mem, capacity)) {
+      perror("munmap() failed");
       abort();
     }
-    if (close(socket_fd)) {
-      perror("close() failed");
+    if (munmap(ref_cnt, sizeof(std::atomic_uint32_t))) {
+      perror("munmap() failed");
+      abort();
+    }
+    if (munmap(lock, sizeof(std::atomic_flag))) {
+      perror("munmap() failed");
+      abort();
+    }
+    if (munmap(start, sizeof(size_t))) {
+      perror("munmap() failed");
+      abort();
+    }
+    if (munmap(end, sizeof(size_t))) {
+      perror("munmap() failed");
+      abort();
+    }
+    if (munmap(full, sizeof(bool))) {
+      perror("munmap() failed");
+      abort();
+    }
+    if (sem_destroy(n_unread)) {
+      perror("sem_destroy() failed");
+      abort();
+    }
+    if (munmap(n_unread, sizeof(sem_t))) {
+      perror("munmap() failed");
       abort();
     }
   }
 }
 
-channel::channel(const channel &t) : shared_mem(t.shared_mem) {
-  socket_fd = t.socket_fd;
+channel::channel(const channel &t) {
+  shared_mem = t.shared_mem;
   ref_cnt = t.ref_cnt;
   local_ref_cnt = t.local_ref_cnt;
-  fork_shared_mem = t.fork_shared_mem;
+  lock = t.lock;
+  start = t.start;
+  end = t.end;
+  full = t.full;
+  n_unread = t.n_unread;
+  capacity = t.capacity;
 
   // increment reference counters
   ref_cnt->fetch_add(1);
   local_ref_cnt->fetch_add(1);
 }
 
-channel::channel(channel &&t) noexcept : shared_mem(std::move(t.shared_mem)) {
-  socket_fd = t.socket_fd;
+channel::channel(channel &&t) noexcept {
+  shared_mem = t.shared_mem;
   ref_cnt = t.ref_cnt;
   local_ref_cnt = t.local_ref_cnt;
-  fork_shared_mem = t.fork_shared_mem;
+  lock = t.lock;
+  start = t.start;
+  end = t.end;
+  full = t.full;
+  n_unread = t.n_unread;
+  capacity = t.capacity;
 
   // increment reference counters
   ref_cnt->fetch_add(1);
   local_ref_cnt->fetch_add(1);
 }
 
-void channel::send_bytes(const void *bytes, const size_t len) {
+void channel::send_bytes(void *bytes, size_t len) {
   // no-op
   if (len == 0)
     return;
 
-  if (len <= MAX_SOCK_MSG_SIZE) {
-    // for small messages, just send them through sockets
-    ssize_t result = send(socket_fd, bytes, len, 0);
-    if (result == -1) {
-      perror("send() failed");
-      throw std::runtime_error("send() failed");
-    } else if ((size_t)result != len) {
-      fprintf(stderr, "sent %ld bytes, should be %ld bytes!\n", result, len);
-      abort();
-    }
-  } else {
-    // for large messages, send them through shared memory
-    shared_mem.write(bytes, len);
+  acquire_lock();
+
+  // ensure that buffer is large enough
+  size_t size_t_size = sizeof(size_t);
+  size_t n = size_t_size + len;
+  size_t head = *start;
+  size_t tail = *end;
+  size_t available_space = 0;
+  if (head < tail)
+    available_space = capacity - (tail - head);
+  else if (head > tail)
+    available_space = head - tail;
+  else if (!(*full))
+    available_space = capacity;
+  if (n > available_space) {
+    release_lock();
+    throw std::overflow_error("channel buffer is full");
   }
+
+  // copy the length into shared buffer
+  void *len_bytes = &len;
+  size_t new_end = (tail + size_t_size) % capacity;
+  if (new_end > tail) {
+    // no wrapping
+    memcpy(static_cast<char *>(shared_mem) + tail, len_bytes, size_t_size);
+  } else {
+    // wrapping occurred
+    size_t first_half_len = capacity - tail;
+    size_t second_half_len = size_t_size - first_half_len;
+    memcpy(static_cast<char *>(shared_mem) + tail, len_bytes, first_half_len);
+    memcpy(shared_mem, static_cast<char *>(len_bytes) + first_half_len,
+           second_half_len);
+  }
+
+  // copy the bytes into shared buffer
+  tail = new_end;
+  new_end = (new_end + len) % capacity;
+  if (new_end > tail) {
+    // no wrapping
+    memcpy(static_cast<char *>(shared_mem) + tail, bytes, n);
+  } else {
+    // wrapping occurred
+    size_t first_half_len = capacity - tail;
+    size_t second_half_len = len - first_half_len;
+    memcpy(static_cast<char *>(shared_mem) + tail, bytes, first_half_len);
+    memcpy(shared_mem, static_cast<const char *>(bytes) + first_half_len,
+           second_half_len);
+  }
+
+  // update metadata
+  if (n == available_space)
+    *full = true;
+  *end = new_end;
+
+  if (sem_post(n_unread)) {
+    release_lock();
+    perror("sem_post() failed");
+    throw std::runtime_error("sem_post() failed");
+  }
+
+  release_lock();
 }
 
 void channel::send_pyobj(const py::object &obj) {
@@ -128,96 +196,86 @@ void channel::send_pyobj(const py::object &obj) {
   Py_buffer *buf = PyMemoryView_GET_BUFFER(mem_view);
 
   // send
-  send_bytes(&(buf->len), sizeof(Py_ssize_t)); // output size
-  send_bytes(buf->buf, buf->len);              // output
+  send_bytes(buf->buf, buf->len);
 }
 
-buffer channel::receive_bytes(const size_t len) {
-  buffer bytes = buffer(len, buffer_type::MALLOC);
-  char *buf = static_cast<char *>(bytes.get_ptr());
-
-  if (len <= MAX_SOCK_MSG_SIZE) {
-    // for small messages, just receive them through sockets
-    ssize_t result = recv(socket_fd, buf, len, 0);
-    if (result == -1) {
-      perror("recv() failed");
-      throw std::runtime_error("recv() failed");
-    } else if ((size_t)result != len) {
-      fprintf(stderr, "received %ld bytes, should be %ld bytes!\n", result,
-              len);
-      abort();
+buffer channel::receive_bytes(const bool block) {
+  if (block) {
+    if (sem_wait(n_unread)) {
+      perror("sem_wait() failed");
+      throw std::runtime_error("sem_wait() failed");
     }
   } else {
-    // for large messages, receive them from shared memory
-    shared_mem.read(buf, len);
-  }
-
-  return bytes;
-}
-
-py::object channel::receive_pyobj() {
-  py::object loads = py::module::import("pickle").attr("loads");
-
-  // receive input size
-  buffer size_buf = receive_bytes(sizeof(Py_ssize_t));
-  Py_ssize_t size = *static_cast<Py_ssize_t *>(size_buf.get_ptr());
-
-  // receive input
-  buffer bytes_buf = receive_bytes(size);
-  py::handle mem_view = py::handle(PyMemoryView_FromMemory(
-      static_cast<char *>(bytes_buf.get_ptr()), size, PyBUF_READ));
-  py::object obj = loads(mem_view);
-
-  return obj;
-}
-
-buffer channel::try_receive_bytes(const size_t len) {
-  buffer bytes = buffer(len, buffer_type::MALLOC);
-  char *buf = static_cast<char *>(bytes.get_ptr());
-
-  if (len <= MAX_SOCK_MSG_SIZE) {
-    // for small messages, just receive them through sockets
-    ssize_t result = recv(socket_fd, buf, len, MSG_DONTWAIT);
-    if (result == -1) {
-      if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+    if (sem_trywait(n_unread)) {
+      if (errno == EAGAIN) {
         throw std::out_of_range("out-of-bounds read detected");
       } else {
-        perror("recv() failed");
-        throw std::runtime_error("recv() failed");
+        perror("sem_trywait() failed");
+        throw std::runtime_error("sem_trywait() failed");
       }
-    } else if ((size_t)result != len) {
-      fprintf(stderr, "received %ld bytes, should be %ld bytes!\n", result,
-              len);
-      abort();
     }
+  }
+  acquire_lock();
+
+  // get length of bytes
+  size_t size_t_size = sizeof(size_t);
+  buffer len_buf = buffer(size_t_size, buffer_type::MALLOC);
+  void *len_bytes = len_buf.get_ptr();
+
+  size_t head = *start;
+  size_t new_start = (head + size_t_size) % capacity;
+  if (new_start > head) {
+    // no wrapping
+    memcpy(len_bytes, static_cast<char *>(shared_mem) + head, size_t_size);
   } else {
-    // for large messages, receive them from shared memory
-    shared_mem.read(buf, len);
+    // wrapping occurred
+    size_t first_half_len = capacity - head;
+    size_t second_half_len = size_t_size - first_half_len;
+    memcpy(len_bytes, static_cast<char *>(shared_mem) + head, first_half_len);
+    memcpy(static_cast<char *>(len_bytes) + first_half_len, shared_mem,
+           second_half_len);
   }
 
-  return bytes;
+  // get bytes
+  size_t len = *static_cast<size_t *>(len_bytes);
+  buffer buf = buffer(len, buffer_type::MALLOC);
+  char *bytes = static_cast<char *>(buf.get_ptr());
+
+  head = new_start;
+  new_start = (new_start + len) % capacity;
+  if (new_start > head) {
+    // no wrapping
+    memcpy(bytes, static_cast<char *>(shared_mem) + head, len);
+  } else {
+    // wrapping occurred
+    size_t first_half_len = capacity - head;
+    size_t second_half_len = len - first_half_len;
+    memcpy(bytes, static_cast<char *>(shared_mem) + head, first_half_len);
+    memcpy(static_cast<char *>(bytes) + first_half_len, shared_mem,
+           second_half_len);
+  }
+
+  // update metadata
+  *full = false;
+  *start = new_start;
+  release_lock();
+
+  return buf;
 }
 
-py::object channel::try_receive_pyobj() {
+py::object channel::receive_pyobj(const bool block) {
   py::object loads = py::module::import("pickle").attr("loads");
 
-  // receive input size
-  buffer size_buf = try_receive_bytes(sizeof(Py_ssize_t));
-  Py_ssize_t size = *static_cast<Py_ssize_t *>(size_buf.get_ptr());
-
-  // receive input
-  buffer bytes_buf = try_receive_bytes(size);
-  py::handle mem_view = py::handle(PyMemoryView_FromMemory(
-      static_cast<char *>(bytes_buf.get_ptr()), size, PyBUF_READ));
+  // receive & deserialize
+  buffer bytes_buf = receive_bytes(block);
+  py::handle mem_view = py::handle(
+      PyMemoryView_FromMemory(static_cast<char *>(bytes_buf.get_ptr()),
+                              bytes_buf.get_len(), PyBUF_READ));
   py::object obj = loads(mem_view);
 
   return obj;
 }
 
-void channel::fork() {
-  ref_cnt->fetch_add(*local_ref_cnt);
-  if (fork_shared_mem) // avoid double forking
-    shared_mem.fork();
-}
+void channel::fork() { ref_cnt->fetch_add(*local_ref_cnt); }
 
 } // namespace snakefish

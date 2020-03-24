@@ -17,8 +17,6 @@ add_library(snakefish SHARED
         src/buffer.h
         src/channel.cpp
         src/channel.h
-        src/shared_buffer.cpp
-        src/shared_buffer.h
         src/snakefish.cpp
         src/snakefish.h
         src/thread.cpp
@@ -50,7 +48,6 @@ add_subdirectory(googletest)
 add_executable(test
         src/tests/main.cpp
         src/tests/channel_tests.h
-        src/tests/shared_buffer_tests.h
         src/tests/test_util.h)
 
 target_include_directories(test PRIVATE

@@ -21,7 +21,7 @@ semaphore_t::semaphore_t(unsigned int val) : name("/snakefish-") {
   }
 }
 #else
-semaphore_t::semaphore_t(int val) {
+semaphore_t::semaphore_t(unsigned int val) {
   sem = static_cast<sem_t *>(util::get_shared_mem(sizeof(sem_t), true));
 
   if (sem_init(sem, 1, val)) {

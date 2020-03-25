@@ -10,7 +10,7 @@ def f() -> List[int]:
     print("f() executing")
     global a
     a = [i for i in range(10)]  # update global variable 'a'
-    return [i for i in range(1000)]  # return a large list
+    return [i for i in range(200)]  # return a large list
 
 
 # the function that will extract shared global variables

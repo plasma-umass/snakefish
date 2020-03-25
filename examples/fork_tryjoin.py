@@ -8,7 +8,7 @@ import csnakefish
 def f() -> List[int]:
     print("f() will sleep for 500 ms")
     time.sleep(0.5)
-    return [i for i in range(1000)]  # return a large list
+    return [i for i in range(200)]  # return a large list
 
 
 # the function that will extract shared global variables

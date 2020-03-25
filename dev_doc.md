@@ -26,7 +26,7 @@ Below are some information for SnakeFish developers.
 **NOTE 2**: If you want to clean the build directory, run `cmake --build cmake-build-debug --target clean -- -j 4`. That alone doesn't purge CMake's cache, so sometimes you might need `rm -rf cmake-build-debug`
 
 ## Design Decisions
-- Shared memory is used for IPC. [Unnamed semaphores](http://man7.org/linux/man-pages/man7/sem_overview.7.html) are used to implement blocking/non-blocking `receive()`. Since unnamed semaphores are not implemented on macOS, named semaphores are used there instead.
+- Shared memory is used for IPC. [Unnamed semaphores](http://man7.org/linux/man-pages/man7/sem_overview.7.html) are used to implement blocking/non-blocking `receive()`. Since unnamed semaphores are not implemented on macOS ([ref 1](https://stackoverflow.com/questions/27736618/why-are-sem-init-sem-getvalue-sem-destroy-deprecated-on-mac-os-x-and-w), [ref 2](https://stackoverflow.com/questions/1413785/sem-init-on-os-x)), named semaphores are used there instead.
 - A `std::atomic_flag` is used as a lock to synchronize shared memory access. Such usage should be safe, as `std::atomic_flag` is [always lock-free](https://en.cppreference.com/w/cpp/atomic/atomic_flag), and lock-free atomics are also address-free ([ref 1](https://stackoverflow.com/a/51463590), [ref 2](https://stackoverflow.com/a/19937333)).
 
 ## Discussion Points
@@ -42,4 +42,4 @@ Below are some information for SnakeFish developers.
 - benchmarks & performance measurements
 
 ## Last Updated
-2020-03-24 e841ae577bba0f61a9ab5ca165cd63f6fa9b102a
+2020-03-24 be7b4439ca69d851f7989bc298a220d2e363cff3

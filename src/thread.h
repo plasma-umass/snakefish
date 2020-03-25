@@ -70,7 +70,7 @@ public:
   thread(py::function f, py::function extract, py::function merge)
       : is_parent(false), child_pid(0), started(false), alive(false),
         child_status(0), func(std::move(f)), extract_func(std::move(extract)),
-        merge_func(std::move(merge)), channel() {}
+        merge_func(std::move(merge)), _channel() {}
 
   /**
    * \brief Start executing this thread. In other words, start executing the
@@ -137,7 +137,7 @@ private:
   py::function merge_func;
   py::object ret_val;
   py::object globals;
-  channel channel;
+  channel _channel;
 };
 
 } // namespace snakefish

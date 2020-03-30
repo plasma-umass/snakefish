@@ -36,10 +36,11 @@ Below are some information for SnakeFish developers.
 ## Issues/Caveats
 - Building the tests with `gcc` will produce 2 "undefined reference" errors. This is weird because the symbols are there if you inspect with `objdump`. This is probably due to some issue with `gcc`'s linking order ([ref 1](https://stackoverflow.com/q/16574113), [ref 2](https://stackoverflow.com/q/31286905)).
 - `pybind11` will only export instantiated versions of template functions/classes to the produced dynamic library ([ref](https://github.com/pybind/pybind11/issues/199)). This *seems* to affect not just the exposed interface but also internal code. For example, if you define a template function to be called only in your C++ code, a missing symbol error for that function would be generated at load time.
+- Building snakefish with `gcc` will produce several visibility warnings for `channel`. There is a fix to make the warnings go away, but then the tests won't build with `clang` (undefined reference errors).
 
 ## Roadmap
 - mutex
 - benchmarks & performance measurements
 
 ## Last Updated
-2020-03-30 73bfadb442ed969d6d6325dd1a6e9e050f0d802b
+2020-03-30 915c40a4776059910992e3b65e0438952bbaea59

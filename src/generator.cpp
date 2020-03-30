@@ -165,7 +165,7 @@ void generator::run() {
 
         // print stacktrace
         e.restore();
-        py::module::import("traceback").attr("print_exc")();
+        PyErr_PrintEx(0);
       }
     } else {
       fprintf(stderr, "unknown command: %d!\n", cmd);

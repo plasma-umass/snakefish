@@ -120,7 +120,7 @@ void thread::run() {
 
     // print stacktrace
     e.restore();
-    py::module::import("traceback").attr("print_exc")();
+    PyErr_PrintEx(0);
   }
 
   exit(0);

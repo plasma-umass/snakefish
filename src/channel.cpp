@@ -10,6 +10,10 @@
 namespace snakefish {
 
 channel::channel(const size_t size) : n_unread(), capacity(size) {
+  // imports pickle functions
+  dumps = py::module::import("pickle").attr("dumps");
+  loads = py::module::import("pickle").attr("loads");
+
   // create shared memory and relevant metadata variables
   shared_mem = util::get_shared_mem(size, false);
   ref_cnt = static_cast<std::atomic_uint32_t *>(
@@ -178,8 +182,6 @@ void channel::send_bytes(void *bytes, size_t len) {
 }
 
 void channel::send_pyobj(const py::object &obj) {
-  py::object dumps = py::module::import("pickle").attr("dumps");
-
   // serialize obj to binary and get output
   py::object bytes = dumps(obj, PICKLE_PROTOCOL);
   PyObject *mem_view = PyMemoryView_GetContiguous(bytes.ptr(), PyBUF_READ, 'C');
@@ -245,8 +247,6 @@ buffer channel::receive_bytes(const bool block) {
 }
 
 py::object channel::receive_pyobj(const bool block) {
-  py::object loads = py::module::import("pickle").attr("loads");
-
   // receive & deserialize
   buffer bytes_buf = receive_bytes(block);
   py::handle mem_view = py::handle(

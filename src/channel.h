@@ -200,6 +200,16 @@ private:
    * \brief Release `lock`.
    */
   void release_lock() { lock->clear(); }
+
+  /**
+   * \brief `pickle.dumps()`
+   */
+  py::object dumps;
+
+  /**
+   * \brief `pickle.loads()`
+   */
+  py::object loads;
 };
 
 } // namespace snakefish

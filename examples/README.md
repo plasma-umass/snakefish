@@ -12,6 +12,8 @@
 - `fork_join.py`: Shows how to spawn a thread and join it (i.e. blocking join).
 - `fork_tryjoin.py`: Shows how to spawn a thread and try-join it (i.e. non-blocking join).
 - `generator.py`: Shows how to spawn a generator, how to get the generated values (blocking or non-blocking), and how to try-join it.
+- `generator_exception.py`: Show how to handle exceptions thrown by generators.
+- `thread_exception.py`: Shows how to handle exceptions thrown by threads.
 
 ## Last Updated
-2020-03-29 8f449049a74377508aaf683c0fb4a3feb625771f
+2020-03-29 ea73d8e0e15f0ab54c923667bff197f1c1d3cbd8

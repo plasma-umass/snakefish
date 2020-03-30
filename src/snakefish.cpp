@@ -1,5 +1,12 @@
 #include "snakefish.h"
 
+static inline uint64_t get_timestamp() { return __rdtsc(); }
+
+static inline uint64_t get_timestamp_serialized() {
+  asm volatile("lfence" ::: "memory");
+  return __rdtsc();
+}
+
 PYBIND11_MODULE(csnakefish, m) {
   m.doc() = "true parallelism for python";
 
@@ -27,6 +34,9 @@ PYBIND11_MODULE(csnakefish, m) {
       .def("send_pyobj", &snakefish::channel::send_pyobj)
       .def("receive_pyobj", &snakefish::channel::receive_pyobj)
       .def("fork", &snakefish::channel::fork);
+
+  m.def("get_timestamp", &get_timestamp);
+  m.def("get_timestamp_serialized", &get_timestamp_serialized);
 
   py::register_exception<std::runtime_error>(m, "RuntimeError");
 }

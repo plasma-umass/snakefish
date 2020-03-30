@@ -9,6 +9,10 @@
 
 namespace snakefish {
 
+std::vector<channel *> all_channels;
+
+std::set<channel *> disposed_channels;
+
 channel::channel(const size_t size) : n_unread(), capacity(size) {
   // imports pickle functions
   dumps = py::module::import("pickle").attr("dumps");
@@ -39,9 +43,13 @@ channel::channel(const size_t size) : n_unread(), capacity(size) {
     fprintf(stderr, "std::atomic_uint32_t is not lock free!\n");
     abort();
   }
+
+  all_channels.push_back(this);
 }
 
 channel::~channel() {
+  disposed_channels.insert(this);
+
   uint32_t global_cnt = ref_cnt->fetch_sub(1) - 1;
   uint32_t local_cnt = local_ref_cnt->fetch_sub(1) - 1;
 
@@ -95,6 +103,8 @@ channel::channel(const channel &t) : n_unread(t.n_unread) {
   // increment reference counters
   ref_cnt->fetch_add(1);
   local_ref_cnt->fetch_add(1);
+
+  all_channels.push_back(this);
 }
 
 channel::channel(channel &&t) noexcept : n_unread(std::move(t.n_unread)) {
@@ -110,6 +120,8 @@ channel::channel(channel &&t) noexcept : n_unread(std::move(t.n_unread)) {
   // increment reference counters
   ref_cnt->fetch_add(1);
   local_ref_cnt->fetch_add(1);
+
+  all_channels.push_back(this);
 }
 
 void channel::send_bytes(void *bytes, size_t len) {

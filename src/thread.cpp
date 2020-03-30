@@ -1,14 +1,27 @@
 #include "thread.h"
+#include "snakefish.h"
 
 namespace snakefish {
+
+std::vector<thread *> all_threads;
+
+std::set<thread *> disposed_threads;
+
+thread::~thread() { disposed_threads.insert(this); }
+
+thread::thread(py::function f, py::function extract, py::function merge)
+    : is_parent(false), child_pid(0), started(false), alive(false),
+      child_status(0), func(std::move(f)), extract_func(std::move(extract)),
+      merge_func(std::move(merge)), _channel() {
+  all_threads.push_back(this);
+}
 
 void thread::start() {
   if (started) {
     throw std::runtime_error("this thread has already been started");
   }
 
-  _channel.fork();
-  pid_t pid = fork();
+  pid_t pid = snakefish_fork();
   if (pid > 0) {
     is_parent = true;
     child_pid = pid;
@@ -110,7 +123,7 @@ void thread::run() {
     _channel.send_pyobj(globals);
     _channel.send_pyobj(ret_val);
   } catch (py::error_already_set &e) {
-    //send globals
+    // send globals
     globals = extract_func(py::globals());
     _channel.send_pyobj(globals);
 
@@ -123,7 +136,7 @@ void thread::run() {
     PyErr_PrintEx(0);
   }
 
-  exit(0);
+  snakefish_exit(0);
 }
 
 py::object thread::get_result() {

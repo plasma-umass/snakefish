@@ -18,7 +18,7 @@ namespace snakefish {
 /**
  * \brief A "thread" class for executing Python functions with true parallelism.
  */
-class [[gnu::visibility("hidden")]] thread {
+class thread {
 public:
   /**
    * \brief No default constructor.
@@ -26,9 +26,9 @@ public:
   thread() = delete;
 
   /**
-   * \brief Default destructor.
+   * \brief Destructor.
    */
-  ~thread() = default;
+  ~thread();
 
   /**
    * \brief No copy constructor.
@@ -43,7 +43,7 @@ public:
   /**
    * \brief No move constructor.
    */
-  thread(thread && t) = delete;
+  thread(thread &&t) = delete;
 
   /**
    * \brief No move assignment operator.
@@ -67,10 +67,7 @@ public:
    * and the second dict is the new `globals()`. The merge function must merge
    * the two by updating the first dict.
    */
-  thread(py::function f, py::function extract, py::function merge)
-      : is_parent(false), child_pid(0), started(false), alive(false),
-        child_status(0), func(std::move(f)), extract_func(std::move(extract)),
-        merge_func(std::move(merge)), _channel() {}
+  thread(py::function f, py::function extract, py::function merge);
 
   /**
    * \brief Start executing this thread. In other words, start executing the
@@ -139,6 +136,18 @@ private:
   py::object globals;
   channel _channel;
 };
+
+/**
+ * \brief A vector is used to track all threads so that their destructors
+ * may be called at exit.
+ */
+extern std::vector<thread *> all_threads;
+
+/**
+ * \brief A set is used to track all disposed threads so that they won't be
+ * destructed multiple times.
+ */
+extern std::set<thread *> disposed_threads;
 
 } // namespace snakefish
 

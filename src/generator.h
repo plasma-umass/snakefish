@@ -20,7 +20,7 @@ enum generator_cmd { NEXT, STOP };
  * \brief A "generator" class for executing Python generators with true
  * parallelism.
  */
-class [[gnu::visibility("hidden")]] generator {
+class generator {
 public:
   /**
    * \brief No default constructor.
@@ -28,9 +28,9 @@ public:
   generator() = delete;
 
   /**
-   * \brief Default destructor.
+   * \brief Destructor.
    */
-  ~generator() = default;
+  ~generator();
 
   /**
    * \brief No copy constructor.
@@ -45,7 +45,7 @@ public:
   /**
    * \brief No move constructor.
    */
-  generator(generator && t) = delete;
+  generator(generator &&t) = delete;
 
   /**
    * \brief No move assignment operator.
@@ -157,6 +157,18 @@ private:
   bool next_sent;      // has command NEXT been sent?
   bool stop_sent;      // has command STOP been sent?
 };
+
+/**
+ * \brief A vector is used to track all generators so that their destructors
+ * may be called at exit.
+ */
+extern std::vector<generator *> all_generators;
+
+/**
+ * \brief A set is used to track all disposed generators so that they won't be
+ * destructed multiple times.
+ */
+extern std::set<generator *> disposed_generators;
 
 } // namespace snakefish
 

@@ -1,3 +1,5 @@
+#include <x86intrin.h>
+
 #include "snakefish.h"
 
 static inline uint64_t get_timestamp() { return __rdtsc(); }

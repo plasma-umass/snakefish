@@ -14,6 +14,7 @@
 - `generator.py`: Shows how to spawn a generator, how to get the generated values (blocking or non-blocking), and how to try-join it.
 - `generator_exception.py`: Show how to handle exceptions thrown by generators.
 - `thread_exception.py`: Shows how to handle exceptions thrown by threads.
+- `timestamp.py`: Shows how to timestamp messages to establish an ordering of events.
 
 ## Last Updated
-2020-03-29 ea73d8e0e15f0ab54c923667bff197f1c1d3cbd8
+2020-03-30 42d7d07055d9f1803e129446470361b40f93240a

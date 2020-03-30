@@ -1,4 +1,4 @@
-FLAGS = -O3 -Wall -Wextra -shared -std=c++11 -fPIC
+FLAGS = -O3 -Wall -Wextra -shared -std=c++11 -fPIC -fvisibility=hidden
 
 INCLUDES = -I../include
 

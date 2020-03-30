@@ -119,7 +119,7 @@ public:
    * \brief Get the output of the thread (i.e. the output of the underlying
    * function).
    */
-  py::object get_result() { return ret_val; }
+  py::object get_result();
 
 private:
   /**

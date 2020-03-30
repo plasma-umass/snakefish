@@ -26,8 +26,9 @@ Below are some information for SnakeFish developers.
 **NOTE 2**: If you want to clean the build directory, run `cmake --build cmake-build-debug --target clean -- -j 4`. That alone doesn't purge CMake's cache, so sometimes you might need `rm -rf cmake-build-debug`
 
 ## Design Decisions
-- Shared memory is used for IPC. [Unnamed semaphores](http://man7.org/linux/man-pages/man7/sem_overview.7.html) are used to implement blocking/non-blocking `receive()`. Since unnamed semaphores are not implemented on macOS ([ref 1](https://stackoverflow.com/questions/27736618/why-are-sem-init-sem-getvalue-sem-destroy-deprecated-on-mac-os-x-and-w), [ref 2](https://stackoverflow.com/questions/1413785/sem-init-on-os-x)), named semaphores are used there instead.
+- Shared memory is used for IPC. [Unnamed semaphores](http://man7.org/linux/man-pages/man7/sem_overview.7.html) are used to implement blocking/non-blocking `receive()`. Since unnamed semaphores are not implemented on macOS ([ref 1](https://stackoverflow.com/q/27736618), [ref 2](https://stackoverflow.com/q/1413785)), named semaphores are used there instead.
 - A `std::atomic_flag` is used as a lock to synchronize shared memory access. Such usage should be safe, as `std::atomic_flag` is [always lock-free](https://en.cppreference.com/w/cpp/atomic/atomic_flag), and lock-free atomics are also address-free ([ref 1](https://stackoverflow.com/a/51463590), [ref 2](https://stackoverflow.com/a/19937333)).
+- Regarding the implementation of `get_timestamp_serialized()`, see [ref 1](https://www.felixcloutier.com/x86/rdtsc), [ref 2](https://stackoverflow.com/a/13772771), [ref 3](https://stackoverflow.com/a/12634857), and [ref 4](https://stackoverflow.com/a/28307254).
 
 ## Discussion Points
 - Better way to IPC objects than `pickle`? Currently, `dumps()` is used to serialize Python objects into `bytes`, which can be converted into byte buffers (`void *`) accessible in C++ ([ref 1](https://docs.python.org/3.8/c-api/memoryview.html), [ref 2](https://docs.python.org/3.8/c-api/buffer.html#buffer-structure)). Deserialization is done in a similar way using `loads()`. This means sending an Python object to another process takes at least 4 copying.
@@ -37,9 +38,8 @@ Below are some information for SnakeFish developers.
 - `pybind11` will only export instantiated versions of template functions/classes to the produced dynamic library ([ref](https://github.com/pybind/pybind11/issues/199)). This *seems* to affect not just the exposed interface but also internal code. For example, if you define a template function to be called only in your C++ code, a missing symbol error for that function would be generated at load time.
 
 ## Roadmap
-- coroutine
 - mutex
 - benchmarks & performance measurements
 
 ## Last Updated
-2020-03-24 be7b4439ca69d851f7989bc298a220d2e363cff3
+2020-03-30 73bfadb442ed969d6d6325dd1a6e9e050f0d802b

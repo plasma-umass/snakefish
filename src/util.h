@@ -3,12 +3,40 @@
 
 #include <cstdio>
 #include <new>
+#include <random>
 
 #include <sys/mman.h>
 
 namespace snakefish {
 
-static void *get_shared_mem(const size_t len, const bool reserve) {
+namespace util {
+
+static inline uint64_t get_random_uint() {
+  static std::random_device rd;
+  static std::mt19937 rng(rd());
+  static std::uniform_int_distribution<std::mt19937::result_type> dist;
+  return dist(rng);
+}
+
+static inline void *get_mem(const size_t len) {
+  // no-op
+  if (len == 0)
+    return nullptr;
+
+  void *p = malloc(len);
+  if (p == nullptr) {
+    perror("malloc() failed");
+    throw std::bad_alloc();
+  } else {
+    return p;
+  }
+}
+
+static inline void *get_shared_mem(const size_t len, const bool reserve) {
+  // no-op
+  if (len == 0)
+    return nullptr;
+
   void *mem;
   if (reserve) {
     mem = mmap(nullptr, len, PROT_READ | PROT_WRITE,
@@ -25,6 +53,8 @@ static void *get_shared_mem(const size_t len, const bool reserve) {
     return mem;
   }
 }
+
+} // namespace util
 
 } // namespace snakefish
 

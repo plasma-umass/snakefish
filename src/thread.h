@@ -70,7 +70,7 @@ public:
   thread(py::function f, py::function extract, py::function merge)
       : is_parent(false), child_pid(0), started(false), alive(false),
         child_status(0), func(std::move(f)), extract_func(std::move(extract)),
-        merge_func(std::move(merge)), channels(sync_channel()) {}
+        merge_func(std::move(merge)), _channel() {}
 
   /**
    * \brief Start executing this thread. In other words, start executing the
@@ -119,18 +119,13 @@ public:
    * \brief Get the output of the thread (i.e. the output of the underlying
    * function).
    */
-  py::object get_result() { return ret_val; }
+  py::object get_result();
 
 private:
   /**
    * \brief Run the underlying function and return the result to the parent.
    */
   void run();
-
-  /**
-   * \brief Convenience function to get the correct `channel` out of `channels`.
-   */
-  channel &get_channel();
 
   bool is_parent;
   pid_t child_pid;
@@ -142,7 +137,7 @@ private:
   py::function merge_func;
   py::object ret_val;
   py::object globals;
-  std::pair<channel, channel> channels;
+  channel _channel;
 };
 
 } // namespace snakefish

@@ -7,9 +7,7 @@ void thread::start() {
     throw std::runtime_error("this thread has already been started");
   }
 
-  channels.first.fork();
-  channels.second.fork();
-
+  _channel.fork();
   pid_t pid = fork();
   if (pid > 0) {
     is_parent = true;
@@ -46,8 +44,8 @@ void thread::join() {
     abort();
   } else {
     alive = false;
-    ret_val = get_channel().receive_pyobj();
-    globals = get_channel().receive_pyobj();
+    globals = _channel.receive_pyobj(true);
+    ret_val = _channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
   }
 }
@@ -72,8 +70,8 @@ bool thread::try_join() {
     abort();
   } else {
     alive = false;
-    ret_val = get_channel().receive_pyobj();
-    globals = get_channel().receive_pyobj();
+    globals = _channel.receive_pyobj(true);
+    ret_val = _channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
     return true;
   }
@@ -105,18 +103,42 @@ void thread::run() {
     abort();
   }
 
-  ret_val = func();
-  get_channel().send_pyobj(ret_val);
-  globals = extract_func(py::globals());
-  get_channel().send_pyobj(globals);
+  try {
+    ret_val = func();
+    globals = extract_func(py::globals());
+
+    _channel.send_pyobj(globals);
+    _channel.send_pyobj(ret_val);
+  } catch (py::error_already_set &e) {
+    //send globals
+    globals = extract_func(py::globals());
+    _channel.send_pyobj(globals);
+
+    // send exceptions to parent
+    _channel.send_pyobj(e.value());
+    _channel.send_pyobj(e.type());
+
+    // print stacktrace
+    e.restore();
+    PyErr_PrintEx(0);
+  }
+
   exit(0);
 }
 
-channel &thread::get_channel() {
-  if (is_parent)
-    return channels.first;
-  else
-    return channels.second;
+py::object thread::get_result() {
+  if ((!started) || alive) {
+    throw std::runtime_error("result is not yet available");
+  }
+
+  if (py::isinstance(ret_val, PyExc_Exception)) {
+    // raise exceptions
+    py::object type = _channel.receive_pyobj(true);
+    PyErr_SetObject(type.ptr(), ret_val.ptr());
+    throw py::error_already_set();
+  } else {
+    return ret_val;
+  }
 }
 
 } // namespace snakefish

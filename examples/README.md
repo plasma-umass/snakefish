@@ -8,8 +8,13 @@
 **NOTE**: There's no need to repeat the first 2 steps every time you run an example unless there are new commits.
 
 ## Listing
+- `channel.py`: Shows how threads can communicate through a channel.
 - `fork_join.py`: Shows how to spawn a thread and join it (i.e. blocking join).
 - `fork_tryjoin.py`: Shows how to spawn a thread and try-join it (i.e. non-blocking join).
+- `generator.py`: Shows how to spawn a generator, how to get the generated values (blocking or non-blocking), and how to try-join it.
+- `generator_exception.py`: Show how to handle exceptions thrown by generators.
+- `thread_exception.py`: Shows how to handle exceptions thrown by threads.
+- `timestamp.py`: Shows how to timestamp messages to establish an ordering of events.
 
 ## Last Updated
-2020-03-16 f75638cdaf8a4d13d7afbaa97d30e0039cef9039
+2020-03-30 42d7d07055d9f1803e129446470361b40f93240a

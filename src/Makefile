@@ -8,7 +8,7 @@ LINKER_OPTIONS = -Wl,-undefined,dynamic_lookup
 
 OUT := $(shell python3-config --extension-suffix)
 
-SRC = buffer.cpp channel.cpp shared_buffer.cpp snakefish.cpp thread.cpp
+SRC = buffer.cpp channel.cpp generator.cpp semaphore_t.cpp snakefish.cpp thread.cpp
 
 
 .PHONY: snakefish clean

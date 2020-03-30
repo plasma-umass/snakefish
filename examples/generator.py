@@ -1,5 +1,5 @@
-import time
 import random
+import time
 from typing import *  # use type hints to make signatures clear
 
 import csnakefish
@@ -34,7 +34,6 @@ print()
 
 # spawn a snakefish generator
 g = csnakefish.Generator(f, extract, merge)
-
 print("generator alive?", g.is_alive())
 g.start()
 print("generator alive?", g.is_alive())
@@ -49,7 +48,7 @@ print()
 for i in range(3):
     while True:
         try:
-            print("next :", g.next(False))
+            print("next:", g.next(False))
             break
         except IndexError:
             print("received nothing, sleep for 100 ms")
@@ -64,6 +63,7 @@ while True:
     else:
         print("try_join() unsuccessful, sleep for 100ms")
         time.sleep(0.1)
+print("generator alive?", g.is_alive())
 print()
 
 # check exit status

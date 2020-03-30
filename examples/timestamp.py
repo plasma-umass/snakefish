@@ -53,13 +53,8 @@ def merge(_old_globals: Dict[str, Any], _new_globals: Dict[str, Any]) -> None:
 
 
 # spawn 3 snakefish threads
-channel.fork()
 t1 = csnakefish.Thread(f1, extract, merge)
-
-channel.fork()
 t2 = csnakefish.Thread(f2, extract, merge)
-
-channel.fork()
 t3 = csnakefish.Thread(f3, extract, merge)
 
 t1.start()

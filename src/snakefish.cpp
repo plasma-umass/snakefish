@@ -34,8 +34,7 @@ PYBIND11_MODULE(csnakefish, m) {
       .def(py::init<>())
       .def(py::init<size_t>())
       .def("send_pyobj", &snakefish::channel::send_pyobj)
-      .def("receive_pyobj", &snakefish::channel::receive_pyobj)
-      .def("fork", &snakefish::channel::fork);
+      .def("receive_pyobj", &snakefish::channel::receive_pyobj);
 
   m.def("get_timestamp", &get_timestamp);
   m.def("get_timestamp_serialized", &get_timestamp_serialized);

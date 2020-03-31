@@ -18,7 +18,19 @@ namespace py = pybind11;
 
 namespace snakefish {
 
+/**
+ * \brief The default [pickle protocol]
+ * (https://docs.python.org/3.8/library/pickle.html#data-stream-format).
+ */
 const unsigned PICKLE_PROTOCOL = 4;
+
+/**
+ * \brief The default `channel` buffer size.
+ *
+ * Note that the buffer will be allocated using `mmap()` with flag
+ * `MAP_NORESERVE`, so the actual memory consumption is much lower
+ * in general.
+ */
 const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
 
 /**

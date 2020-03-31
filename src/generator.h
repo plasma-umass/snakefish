@@ -1,3 +1,7 @@
+/**
+ * \file generator.h
+ */
+
 #ifndef SNAKEFISH_GENERATOR_H
 #define SNAKEFISH_GENERATOR_H
 

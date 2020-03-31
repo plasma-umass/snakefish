@@ -163,16 +163,10 @@ private:
 };
 
 /**
- * \brief A vector is used to track all generators so that their destructors
+ * \brief A set is used to track all generators so that their destructors
  * may be called at exit.
  */
-extern std::vector<generator *> all_generators;
-
-/**
- * \brief A set is used to track all disposed generators so that they won't be
- * destructed multiple times.
- */
-extern std::set<generator *> disposed_generators;
+extern std::set<generator *> all_generators;
 
 } // namespace snakefish
 

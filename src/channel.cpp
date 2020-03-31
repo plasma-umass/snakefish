@@ -9,9 +9,7 @@
 
 namespace snakefish {
 
-std::vector<channel *> all_channels;
-
-std::set<channel *> disposed_channels;
+std::set<channel *> all_channels;
 
 channel::channel(const size_t size) : n_unread(), capacity(size) {
   // imports pickle functions
@@ -44,11 +42,11 @@ channel::channel(const size_t size) : n_unread(), capacity(size) {
     abort();
   }
 
-  all_channels.push_back(this);
+  all_channels.insert(this);
 }
 
 channel::~channel() {
-  disposed_channels.insert(this);
+  all_channels.erase(this);
 
   uint32_t global_cnt = ref_cnt->fetch_sub(1) - 1;
   uint32_t local_cnt = local_ref_cnt->fetch_sub(1) - 1;
@@ -104,7 +102,7 @@ channel::channel(const channel &t) : n_unread(t.n_unread) {
   ref_cnt->fetch_add(1);
   local_ref_cnt->fetch_add(1);
 
-  all_channels.push_back(this);
+  all_channels.insert(this);
 }
 
 channel::channel(channel &&t) noexcept : n_unread(std::move(t.n_unread)) {
@@ -121,7 +119,7 @@ channel::channel(channel &&t) noexcept : n_unread(std::move(t.n_unread)) {
   ref_cnt->fetch_add(1);
   local_ref_cnt->fetch_add(1);
 
-  all_channels.push_back(this);
+  all_channels.insert(this);
 }
 
 void channel::send_bytes(void *bytes, size_t len) {

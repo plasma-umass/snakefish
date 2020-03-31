@@ -138,16 +138,10 @@ private:
 };
 
 /**
- * \brief A vector is used to track all threads so that their destructors
+ * \brief A set is used to track all threads so that their destructors
  * may be called at exit.
  */
-extern std::vector<thread *> all_threads;
-
-/**
- * \brief A set is used to track all disposed threads so that they won't be
- * destructed multiple times.
- */
-extern std::set<thread *> disposed_threads;
+extern std::set<thread *> all_threads;
 
 } // namespace snakefish
 

@@ -17,21 +17,22 @@ static inline pid_t snakefish_fork() {
 // d'tors won't be called when calling exit()
 // so call them manually
 static inline void snakefish_exit(const int status) {
-  for (auto t : snakefish::all_threads) {
-    if (disposed_threads.find(t) == disposed_threads.end()) {
-      t->~thread();
-    }
+  // make copies to avoid modifications during iterations
+  std::set<thread *> threads(snakefish::all_threads);
+  for (auto &t : threads) {
+    t->~thread();
   }
-  for (auto g : snakefish::all_generators) {
-    if (disposed_generators.find(g) == disposed_generators.end()) {
-      g->~generator();
-    }
+
+  std::set<generator *> generators(snakefish::all_generators);
+  for (auto &g : generators) {
+    g->~generator();
   }
-  for (auto c : snakefish::all_channels) {
-    if (disposed_channels.find(c) == disposed_channels.end()) {
-      c->~channel();
-    }
+
+  std::set<channel *> channels(snakefish::all_channels);
+  for (auto &c : channels) {
+    c->~channel();
   }
+
   std::exit(status);
 }
 

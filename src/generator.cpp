@@ -3,11 +3,9 @@
 
 namespace snakefish {
 
-std::vector<generator *> all_generators;
+std::set<generator *> all_generators;
 
-std::set<generator *> disposed_generators;
-
-generator::~generator() { disposed_generators.insert(this); }
+generator::~generator() { all_generators.erase(this); }
 
 generator::generator(const py::function &f, py::function extract,
                      py::function merge)
@@ -26,7 +24,7 @@ generator::generator(const py::function &f, py::function extract,
 
   _next = py::getattr(gen, "__next__");
 
-  all_generators.push_back(this);
+  all_generators.insert(this);
 }
 
 void generator::start() {

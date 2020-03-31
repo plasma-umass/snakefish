@@ -3,17 +3,15 @@
 
 namespace snakefish {
 
-std::vector<thread *> all_threads;
+std::set<thread *> all_threads;
 
-std::set<thread *> disposed_threads;
-
-thread::~thread() { disposed_threads.insert(this); }
+thread::~thread() { all_threads.erase(this); }
 
 thread::thread(py::function f, py::function extract, py::function merge)
     : is_parent(false), child_pid(0), started(false), alive(false),
       child_status(0), func(std::move(f)), extract_func(std::move(extract)),
       merge_func(std::move(merge)), _channel() {
-  all_threads.push_back(this);
+  all_threads.insert(this);
 }
 
 void thread::start() {

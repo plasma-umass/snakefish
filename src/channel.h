@@ -226,16 +226,10 @@ private:
 };
 
 /**
- * \brief A vector is used to track all channels so that their destructors
+ * \brief A set is used to track all channels so that their destructors
  * may be called at exit.
  */
-extern std::vector<channel *> all_channels;
-
-/**
- * \brief A set is used to track all disposed channels so that they won't be
- * destructed multiple times.
- */
-extern std::set<channel *> disposed_channels;
+extern std::set<channel *> all_channels;
 
 } // namespace snakefish
 

@@ -31,33 +31,33 @@ TEST(ChannelTest, ReadWriteNoWrapping) {
   size_t capacity = TEST_CAPACITY + sizeof(size_t);
   channel_test channel = channel_test(capacity);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer bytes = get_random_bytes(TEST_CAPACITY - 1);
   buffer copy = duplicate_bytes(bytes.get_ptr(), TEST_CAPACITY - 1);
   channel.send_bytes(bytes.get_ptr(), TEST_CAPACITY - 1);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, capacity - 1);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), capacity - 1);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer read_bytes = channel.receive_bytes(true);
   ASSERT_EQ(read_bytes.get_len(), TEST_CAPACITY - 1);
   ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), TEST_CAPACITY - 1), 0);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, capacity - 1);
-  ASSERT_EQ(*channel.end, capacity - 1);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), capacity - 1);
+  ASSERT_EQ((channel.end)->load(), capacity - 1);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 }
 
@@ -65,33 +65,33 @@ TEST(ChannelTest, ReadWriteWithWrapping) {
   size_t capacity = TEST_CAPACITY + sizeof(size_t);
   channel_test channel = channel_test(capacity);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer bytes = get_random_bytes(TEST_CAPACITY);
   buffer copy = duplicate_bytes(bytes.get_ptr(), TEST_CAPACITY);
   channel.send_bytes(bytes.get_ptr(), TEST_CAPACITY);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, true);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), true);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer read_bytes = channel.receive_bytes(true);
   ASSERT_EQ(read_bytes.get_len(), TEST_CAPACITY);
   ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), TEST_CAPACITY), 0);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 }
 
@@ -99,44 +99,44 @@ TEST(ChannelTest, ReadWriteAfterWrapping) {
   size_t capacity = TEST_CAPACITY + 2 * sizeof(size_t);
   channel_test channel = channel_test(capacity);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer bytes = get_random_bytes(TEST_CAPACITY / 2);
   buffer copy = duplicate_bytes(bytes.get_ptr(), TEST_CAPACITY / 2);
   channel.send_bytes(bytes.get_ptr(), TEST_CAPACITY / 2);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, capacity / 2);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), capacity / 2);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer read_bytes = channel.receive_bytes(true);
   ASSERT_EQ(read_bytes.get_len(), TEST_CAPACITY / 2);
   ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), TEST_CAPACITY / 2), 0);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, capacity / 2);
-  ASSERT_EQ(*channel.end, capacity / 2);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), capacity / 2);
+  ASSERT_EQ((channel.end)->load(), capacity / 2);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer bytes2 = get_random_bytes(capacity - sizeof(size_t));
   buffer copy2 = duplicate_bytes(bytes2.get_ptr(), capacity - sizeof(size_t));
   channel.send_bytes(bytes2.get_ptr(), capacity - sizeof(size_t));
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, capacity / 2);
-  ASSERT_EQ(*channel.end, capacity / 2);
-  ASSERT_EQ(*channel.full, true);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), capacity / 2);
+  ASSERT_EQ((channel.end)->load(), capacity / 2);
+  ASSERT_EQ((channel.full)->load(), true);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer read_bytes2 = channel.receive_bytes(true);
@@ -145,11 +145,11 @@ TEST(ChannelTest, ReadWriteAfterWrapping) {
       memcmp(copy2.get_ptr(), read_bytes2.get_ptr(), capacity - sizeof(size_t)),
       0);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, capacity / 2);
-  ASSERT_EQ(*channel.end, capacity / 2);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), capacity / 2);
+  ASSERT_EQ((channel.end)->load(), capacity / 2);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 }
 
@@ -157,11 +157,11 @@ TEST(ChannelTest, WriteOverflow) {
   size_t capacity = TEST_CAPACITY + 3 * sizeof(size_t);
   channel_test channel = channel_test(capacity);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   // without wrapping
@@ -172,11 +172,11 @@ TEST(ChannelTest, WriteOverflow) {
     ASSERT_EQ(std::string(e.what()), "channel buffer is full");
   }
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   // with wrapping
@@ -186,21 +186,21 @@ TEST(ChannelTest, WriteOverflow) {
   buffer read_bytes = channel.receive_bytes(true);
   ASSERT_EQ(read_bytes.get_len(), TEST_CAPACITY / 2);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, TEST_CAPACITY / 2 + sizeof(size_t));
-  ASSERT_EQ(*channel.end, TEST_CAPACITY / 2 + sizeof(size_t));
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), TEST_CAPACITY / 2 + sizeof(size_t));
+  ASSERT_EQ((channel.end)->load(), TEST_CAPACITY / 2 + sizeof(size_t));
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   channel.send_bytes(bytes2.get_ptr(), TEST_CAPACITY / 2);
   channel.send_bytes(bytes2.get_ptr(), 1);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, TEST_CAPACITY / 2 + sizeof(size_t));
-  ASSERT_EQ(*channel.end, 1);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), TEST_CAPACITY / 2 + sizeof(size_t));
+  ASSERT_EQ((channel.end)->load(), 1);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   try {
@@ -209,11 +209,11 @@ TEST(ChannelTest, WriteOverflow) {
     ASSERT_EQ(std::string(e.what()), "channel buffer is full");
   }
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, TEST_CAPACITY / 2 + sizeof(size_t));
-  ASSERT_EQ(*channel.end, 1);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), TEST_CAPACITY / 2 + sizeof(size_t));
+  ASSERT_EQ((channel.end)->load(), 1);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 }
 
@@ -221,11 +221,11 @@ TEST(ChannelTest, ReadOutOfBound) {
   size_t capacity = TEST_CAPACITY + 3 * sizeof(size_t);
   channel_test channel = channel_test(capacity);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   // without wrapping
@@ -235,11 +235,11 @@ TEST(ChannelTest, ReadOutOfBound) {
     ASSERT_EQ(std::string(e.what()), "out-of-bounds read detected");
   }
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   // with wrapping
@@ -249,41 +249,41 @@ TEST(ChannelTest, ReadOutOfBound) {
   buffer read_bytes2 = channel.receive_bytes(true);
   ASSERT_EQ(read_bytes2.get_len(), TEST_CAPACITY / 2);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, TEST_CAPACITY / 2 + sizeof(size_t));
-  ASSERT_EQ(*channel.end, TEST_CAPACITY / 2 + sizeof(size_t));
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), TEST_CAPACITY / 2 + sizeof(size_t));
+  ASSERT_EQ((channel.end)->load(), TEST_CAPACITY / 2 + sizeof(size_t));
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   channel.send_bytes(bytes.get_ptr(), TEST_CAPACITY / 2);
   channel.send_bytes(bytes.get_ptr(), 1);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, TEST_CAPACITY / 2 + sizeof(size_t));
-  ASSERT_EQ(*channel.end, 1);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), TEST_CAPACITY / 2 + sizeof(size_t));
+  ASSERT_EQ((channel.end)->load(), 1);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer read_bytes3 = channel.receive_bytes(true);
   ASSERT_EQ(read_bytes3.get_len(), TEST_CAPACITY / 2);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, capacity - sizeof(size_t));
-  ASSERT_EQ(*channel.end, 1);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), capacity - sizeof(size_t));
+  ASSERT_EQ((channel.end)->load(), 1);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer read_bytes4 = channel.receive_bytes(true);
   ASSERT_EQ(read_bytes4.get_len(), 1);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 1);
-  ASSERT_EQ(*channel.end, 1);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 1);
+  ASSERT_EQ((channel.end)->load(), 1);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   try {
@@ -292,11 +292,11 @@ TEST(ChannelTest, ReadOutOfBound) {
     ASSERT_EQ(std::string(e.what()), "out-of-bounds read detected");
   }
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 1);
-  ASSERT_EQ(*channel.end, 1);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 1);
+  ASSERT_EQ((channel.end)->load(), 1);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 }
 
@@ -304,11 +304,11 @@ TEST(ChannelTest, IpcReadWrite) {
   size_t capacity = TEST_CAPACITY + sizeof(size_t);
   channel_test channel = channel_test(capacity);
   ASSERT_NE(channel.shared_mem, nullptr);
-  ASSERT_EQ(*channel.ref_cnt, 1);
-  ASSERT_EQ(*channel.local_ref_cnt, 1);
-  ASSERT_EQ(*channel.start, 0);
-  ASSERT_EQ(*channel.end, 0);
-  ASSERT_EQ(*channel.full, false);
+  ASSERT_EQ((channel.ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+  ASSERT_EQ((channel.start)->load(), 0);
+  ASSERT_EQ((channel.end)->load(), 0);
+  ASSERT_EQ((channel.full)->load(), false);
   ASSERT_EQ(channel.capacity, capacity);
 
   buffer bytes = get_random_bytes(TEST_CAPACITY);
@@ -320,11 +320,11 @@ TEST(ChannelTest, IpcReadWrite) {
     // child writes
     channel.send_bytes(bytes.get_ptr(), TEST_CAPACITY);
     ASSERT_NE(channel.shared_mem, nullptr);
-    ASSERT_EQ(*channel.ref_cnt, 2);
-    ASSERT_EQ(*channel.local_ref_cnt, 1);
-    ASSERT_EQ(*channel.start, 0);
-    ASSERT_EQ(*channel.end, 0);
-    ASSERT_EQ(*channel.full, true);
+    ASSERT_EQ((channel.ref_cnt)->load(), 2);
+    ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+    ASSERT_EQ((channel.start)->load(), 0);
+    ASSERT_EQ((channel.end)->load(), 0);
+    ASSERT_EQ((channel.full)->load(), true);
     ASSERT_EQ(channel.capacity, capacity);
 
     // child exits
@@ -347,11 +347,11 @@ TEST(ChannelTest, IpcReadWrite) {
     ASSERT_EQ(read_bytes.get_len(), TEST_CAPACITY);
     ASSERT_EQ(memcmp(copy.get_ptr(), read_bytes.get_ptr(), TEST_CAPACITY), 0);
     ASSERT_NE(channel.shared_mem, nullptr);
-    ASSERT_EQ(*channel.ref_cnt, 1);
-    ASSERT_EQ(*channel.local_ref_cnt, 1);
-    ASSERT_EQ(*channel.start, 0);
-    ASSERT_EQ(*channel.end, 0);
-    ASSERT_EQ(*channel.full, false);
+    ASSERT_EQ((channel.ref_cnt)->load(), 1);
+    ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
+    ASSERT_EQ((channel.start)->load(), 0);
+    ASSERT_EQ((channel.end)->load(), 0);
+    ASSERT_EQ((channel.full)->load(), false);
     ASSERT_EQ(channel.capacity, capacity);
   } else {
     perror("fork() failed");
@@ -468,18 +468,18 @@ TEST(ChannelTest, MultiProcessSharing) {
     }
 
     // check again after child exits
-    ASSERT_EQ(*channel.ref_cnt, 1);
-    ASSERT_EQ(*channel.local_ref_cnt, 1);
+    ASSERT_EQ((channel.ref_cnt)->load(), 1);
+    ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
   } else {
     // before child make a copy of the second channel
-    ASSERT_EQ(*channel.ref_cnt, 2);
-    ASSERT_EQ(*channel.local_ref_cnt, 1);
+    ASSERT_EQ((channel.ref_cnt)->load(), 2);
+    ASSERT_EQ((channel.local_ref_cnt)->load(), 1);
 
     channel_test channel_copy = channel;
 
     // after child make a copy of the shared buffer
-    ASSERT_EQ(*channel.ref_cnt, 3);
-    ASSERT_EQ(*channel.local_ref_cnt, 2);
+    ASSERT_EQ((channel.ref_cnt)->load(), 3);
+    ASSERT_EQ((channel.local_ref_cnt)->load(), 2);
 
     // child forks
     channel.fork();
@@ -499,8 +499,8 @@ TEST(ChannelTest, MultiProcessSharing) {
       }
 
       // check again after grandchild exits
-      ASSERT_EQ(*channel.ref_cnt, 3);
-      ASSERT_EQ(*channel.local_ref_cnt, 2);
+      ASSERT_EQ((channel.ref_cnt)->load(), 3);
+      ASSERT_EQ((channel.local_ref_cnt)->load(), 2);
 
       // child exits
       // cleanup necessary because d'tors won't be called when calling exit()
@@ -509,8 +509,8 @@ TEST(ChannelTest, MultiProcessSharing) {
       exit(0);
     } else {
       // grandchild
-      ASSERT_EQ(*channel.ref_cnt, 5);
-      ASSERT_EQ(*channel.local_ref_cnt, 2);
+      ASSERT_EQ((channel.ref_cnt)->load(), 5);
+      ASSERT_EQ((channel.local_ref_cnt)->load(), 2);
 
       // grandchild exits
       // cleanup necessary because d'tors won't be called when calling exit()

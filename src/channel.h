@@ -178,17 +178,17 @@ protected:
   /**
    * \brief Index of first used byte.
    */
-  size_t *start;
+  std::atomic_size_t *start;
 
   /**
    * \brief Index of first unused byte.
    */
-  size_t *end;
+  std::atomic_size_t *end;
 
   /**
    * \brief A flag indicating whether this buffer is full.
    */
-  bool *full;
+  std::atomic_bool *full;
 
   /**
    * \brief Number of unread messages.

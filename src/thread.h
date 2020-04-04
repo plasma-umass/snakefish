@@ -98,14 +98,14 @@ public:
    * \returns `true` if this thread has been started and has not yet terminated;
    * `false` otherwise.
    */
-  bool is_alive() { return alive; }
+  bool is_alive() { return alive->load(); }
 
   /**
    * \brief Get the exit status of the thread.
    *
    * \returns -1 if the thread hasn't been started yet. -2 if the thread hasn't
-   * exited yet. -3 if the thread exited abnormally. Otherwise, the exit status
-   * given by the thread is returned.
+   * been joined yet. -3 if the thread exited abnormally. Otherwise, the exit
+   * status given by the thread is returned.
    *
    * Note that a snakefish thread is really a process. Hence the "exit status"
    * terminology.
@@ -127,7 +127,8 @@ private:
   bool is_parent;
   pid_t child_pid;
   bool started;
-  bool alive;
+  std::atomic_bool *alive;
+  bool joined;
   int child_status;
   py::function func;
   py::function extract_func;

@@ -1,16 +1,31 @@
 #include "thread.h"
 #include "snakefish.h"
+#include "util.h"
 
 namespace snakefish {
 
 std::set<thread *> all_threads;
 
-thread::~thread() { all_threads.erase(this); }
+thread::~thread() {
+  all_threads.erase(this);
+
+  if (is_parent) {
+    if (munmap(alive, sizeof(std::atomic_bool))) {
+      perror("munmap() failed");
+      abort();
+    }
+  }
+}
 
 thread::thread(py::function f, py::function extract, py::function merge)
-    : is_parent(false), child_pid(0), started(false), alive(false),
+    : is_parent(false), child_pid(0), started(false), joined(false),
       child_status(0), func(std::move(f)), extract_func(std::move(extract)),
       merge_func(std::move(merge)), _channel() {
+  // create shared memory
+  alive = static_cast<std::atomic_bool *>(
+      util::get_shared_mem(sizeof(std::atomic_bool), true));
+  alive->store(false);
+
   all_threads.insert(this);
 }
 
@@ -24,12 +39,10 @@ void thread::start() {
     is_parent = true;
     child_pid = pid;
     started = true;
-    alive = true;
   } else if (pid == 0) {
     is_parent = false;
     child_pid = 0;
     started = true;
-    alive = true;
     run();
   } else {
     perror("fork() failed");
@@ -54,7 +67,7 @@ void thread::join() {
     fprintf(stderr, "joined pid = %d, child pid = %d!\n", result, child_pid);
     abort();
   } else {
-    alive = false;
+    joined = true;
     globals = _channel.receive_pyobj(true);
     ret_val = _channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
@@ -80,7 +93,7 @@ bool thread::try_join() {
     fprintf(stderr, "joined pid = %d, child pid = %d!\n", result, child_pid);
     abort();
   } else {
-    alive = false;
+    joined = true;
     globals = _channel.receive_pyobj(true);
     ret_val = _channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
@@ -91,7 +104,7 @@ bool thread::try_join() {
 int thread::get_exit_status() {
   if (!started) {
     return -1;
-  } else if (alive) {
+  } else if (!joined) {
     return -2;
   } else if (WIFEXITED(child_status)) {
     return WEXITSTATUS(child_status);
@@ -109,11 +122,8 @@ void thread::run() {
     fprintf(stderr, "run() called but thread hasn't started yet!\n");
     abort();
   }
-  if (!alive) {
-    fprintf(stderr, "run() called but thread is no longer alive!\n");
-    abort();
-  }
 
+  alive->store(true);
   try {
     ret_val = func();
     globals = extract_func(py::globals());
@@ -133,12 +143,13 @@ void thread::run() {
     e.restore();
     PyErr_PrintEx(0);
   }
+  alive->store(false);
 
   snakefish_exit(0);
 }
 
 py::object thread::get_result() {
-  if ((!started) || alive) {
+  if ((!started) || (!joined)) {
     throw std::runtime_error("result is not yet available");
   }
 

@@ -111,19 +111,11 @@ public:
   bool try_join();
 
   /**
-   * \brief Get the status of the generator.
-   *
-   * \returns `true` if this generator has been started and has not yet
-   * terminated; `false` otherwise.
-   */
-  bool is_alive() { return alive; }
-
-  /**
    * \brief Get the exit status of the generator.
    *
    * \returns -1 if the generator hasn't been started yet. -2 if the generator
-   * hasn't exited yet. -3 if the generator exited abnormally. Otherwise, the
-   * exit status given by the generator is returned.
+   * hasn't been joined yet. -3 if the generator exited abnormally. Otherwise,
+   * the exit status given by the generator is returned.
    *
    * Note that a snakefish generator is really a process. Hence the
    * "exit status" terminology.
@@ -149,7 +141,7 @@ private:
   bool is_parent;
   pid_t child_pid;
   bool started;
-  bool alive;
+  bool joined;
   int child_status;
   py::object gen;   // the generator object
   py::object _next; // _next() => gen.__next__()

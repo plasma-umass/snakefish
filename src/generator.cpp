@@ -9,7 +9,7 @@ generator::~generator() { all_generators.erase(this); }
 
 generator::generator(const py::function &f, py::function extract,
                      py::function merge)
-    : is_parent(false), child_pid(0), started(false), alive(false),
+    : is_parent(false), child_pid(0), started(false), joined(false),
       child_status(0), extract_func(std::move(extract)),
       merge_func(std::move(merge)), _channel(), cmd_channel(1024),
       next_sent(false), stop_sent(false) {
@@ -37,12 +37,10 @@ void generator::start() {
     is_parent = true;
     child_pid = pid;
     started = true;
-    alive = true;
   } else if (pid == 0) {
     is_parent = false;
     child_pid = 0;
     started = true;
-    alive = true;
     run();
   } else {
     perror("fork() failed");
@@ -91,7 +89,7 @@ void generator::join() {
     fprintf(stderr, "joined pid = %d, child pid = %d!\n", result, child_pid);
     abort();
   } else {
-    alive = false;
+    joined = true;
     globals = _channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
   }
@@ -121,7 +119,7 @@ bool generator::try_join() {
     fprintf(stderr, "joined pid = %d, child pid = %d!\n", result, child_pid);
     abort();
   } else {
-    alive = false;
+    joined = true;
     globals = _channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
     return true;
@@ -131,7 +129,7 @@ bool generator::try_join() {
 int generator::get_exit_status() {
   if (!started) {
     return -1;
-  } else if (alive) {
+  } else if (!joined) {
     return -2;
   } else if (WIFEXITED(child_status)) {
     return WEXITSTATUS(child_status);
@@ -147,10 +145,6 @@ void generator::run() {
   }
   if (!started) {
     fprintf(stderr, "run() called but generator hasn't started yet!\n");
-    abort();
-  }
-  if (!alive) {
-    fprintf(stderr, "run() called but generator is no longer alive!\n");
     abort();
   }
 

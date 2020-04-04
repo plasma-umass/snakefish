@@ -34,10 +34,7 @@ print()
 
 # spawn a snakefish generator
 g = snakefish.Generator(f, extract, merge)
-print("generator alive?", g.is_alive())
 g.start()
-print("generator alive?", g.is_alive())
-print()
 
 # blocking receive
 for i in range(3):
@@ -63,7 +60,6 @@ while True:
     else:
         print("try_join() unsuccessful, sleep for 100ms")
         time.sleep(0.1)
-print("generator alive?", g.is_alive())
 print()
 
 # check exit status

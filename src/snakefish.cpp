@@ -27,7 +27,6 @@ PYBIND11_MODULE(snakefish, m) {
       .def("next", &snakefish::generator::next)
       .def("join", &snakefish::generator::join)
       .def("try_join", &snakefish::generator::try_join)
-      .def("is_alive", &snakefish::generator::is_alive)
       .def("get_exit_status", &snakefish::generator::get_exit_status);
 
   py::class_<snakefish::channel>(m, "Channel")

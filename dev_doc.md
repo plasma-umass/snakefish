@@ -11,7 +11,6 @@ Below are some information for SnakeFish developers.
 .
 ├── examples [Python scripts explaining usage]
 └── src [C++ source code]
-    ├── snakefish [Python source code]
     └── tests [C++ unit tests]
 ```
 
@@ -44,4 +43,4 @@ Below are some information for SnakeFish developers.
 - benchmarks & performance measurements
 
 ## Last Updated
-2020-03-30 3fdadb9056bfe8d4c872594bd58707fbd132790b
+2020-04-04 5ad2e495b0433a8b9ac28aae364ace987f806bf8

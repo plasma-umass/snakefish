@@ -2,7 +2,7 @@ import random
 import time
 from typing import *  # use type hints to make signatures clear
 
-import csnakefish
+import snakefish
 
 a = 1  # global variable 'a'
 
@@ -33,7 +33,7 @@ print("global 'a' was", a)
 print()
 
 # spawn a snakefish generator
-g = csnakefish.Generator(f, extract, merge)
+g = snakefish.Generator(f, extract, merge)
 print("generator alive?", g.is_alive())
 g.start()
 print("generator alive?", g.is_alive())

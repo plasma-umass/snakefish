@@ -2,9 +2,9 @@ import random
 import time
 from typing import *  # use type hints to make signatures clear
 
-import csnakefish
+import snakefish
 
-channel = csnakefish.Channel()  # create a channel
+channel = snakefish.Channel()  # create a channel
 
 
 # a function that will be executed on a snakefish thread
@@ -13,14 +13,14 @@ def f1() -> None:
         print("thread #1: sleep for 100 ms")
         time.sleep(0.1)
 
-    ts = csnakefish.get_timestamp_serialized()
+    ts = snakefish.get_timestamp_serialized()
     print("thread #1: sending an event...")
     channel.send_pyobj((ts, "explosion"))
 
 
 # a function that will be executed on a snakefish thread
 def f2() -> None:
-    ts = csnakefish.get_timestamp_serialized()
+    ts = snakefish.get_timestamp_serialized()
     print("thread #2: sending an event...")
     channel.send_pyobj((ts, "implosion"))
 
@@ -53,9 +53,9 @@ def merge(_old_globals: Dict[str, Any], _new_globals: Dict[str, Any]) -> None:
 
 
 # spawn 3 snakefish threads
-t1 = csnakefish.Thread(f1, extract, merge)
-t2 = csnakefish.Thread(f2, extract, merge)
-t3 = csnakefish.Thread(f3, extract, merge)
+t1 = snakefish.Thread(f1, extract, merge)
+t2 = snakefish.Thread(f2, extract, merge)
+t3 = snakefish.Thread(f3, extract, merge)
 
 t1.start()
 t2.start()

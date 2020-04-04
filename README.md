@@ -25,7 +25,7 @@ Finally, since SnakeFish works independently of the Python interpreter, you may 
 
 ## How to Use
 1. Place the built `.so` file in a directory that's on your `PYTHONPATH`.
-2. `import csnakefish` in your Python code to import the extension module.
+2. `import snakefish` in your Python code to import the extension module.
 
 **NOTE**: You can find some examples [here](examples).
 

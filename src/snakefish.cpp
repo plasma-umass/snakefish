@@ -9,7 +9,7 @@ static inline uint64_t get_timestamp_serialized() {
   return __rdtsc();
 }
 
-PYBIND11_MODULE(csnakefish, m) {
+PYBIND11_MODULE(snakefish, m) {
   m.doc() = "true parallelism for python";
 
   py::class_<snakefish::thread>(m, "Thread")

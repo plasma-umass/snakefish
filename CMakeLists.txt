@@ -42,7 +42,7 @@ target_compile_options(snakefish PRIVATE
 target_link_options(snakefish PRIVATE
         -Wl,-undefined,dynamic_lookup)
 
-set_target_properties(snakefish PROPERTIES PREFIX "c")
+set_target_properties(snakefish PROPERTIES PREFIX "")
 set_target_properties(snakefish PROPERTIES SUFFIX ${LIB_SUFFIX}) # switch to Python3_SOABI when cmake 3.17 is available
 
 # test

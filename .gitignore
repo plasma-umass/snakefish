@@ -6,3 +6,4 @@ include/pybind11/
 googletest/
 pybind11/
 doc/
+*.json

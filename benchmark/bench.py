@@ -16,6 +16,8 @@ if len(sys.argv) < 3:
 else:
     bench_target = sys.argv[1]
     program_path = sys.argv[2]
+    if program_path[-1] != '/':
+        program_path += '/'
     if len(sys.argv) >= 4:
         skip = sys.argv[3].split(',')
     else:

@@ -9,7 +9,9 @@ Below are some information for SnakeFish developers.
 ## Directory Structure
 ```
 .
+├── benchmark [scripts for benchmarking]
 ├── examples [Python scripts explaining usage]
+    └── multiprocessing [examples reimplemented with multiprocessing]
 └── src [C++ source code]
     └── tests [C++ unit tests]
 ```
@@ -42,4 +44,4 @@ Below are some information for SnakeFish developers.
 - benchmarks & performance measurements
 
 ## Last Updated
-2020-04-04 18a20780b5ec374ae6d68e99c25ca7af6ef4010b
+2020-04-06 b2f6442d8a542ab6c0faffb6cd796548d2ee2b8f

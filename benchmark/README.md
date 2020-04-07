@@ -1,5 +1,8 @@
 # Benchmark Scripts
 
+## `analysis.R`
+R code for plots & analysis.
+
 ## `bench.py`
 Usage: python3 bench.py <bench_target> <program_path> [skip]
 

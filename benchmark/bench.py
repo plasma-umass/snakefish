@@ -22,9 +22,9 @@ else:
         skip = []
 
 # get programs
-programs = []
+programs = [("%s-%s" % (bench_target, "dummy"), 'dummy.py')]
 for f in sorted(os.listdir(program_path)):
-    if f[-3:] == ".py" and f not in skip:
+    if f.endswith(".py") and f not in skip:
         bench_name = "%s-%s" % (bench_target, f[:-3])
         file_path = program_path + f
         programs.append((bench_name, file_path))

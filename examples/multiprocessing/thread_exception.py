@@ -1,11 +1,9 @@
-import multiprocessing
 import random
 import time
 from typing import *  # use type hints to make signatures clear
 
 import wrappers
 
-multiprocessing.set_start_method('fork')  # this is needed for merging to work
 a = 1  # global variable 'a'
 
 

@@ -4,7 +4,6 @@ import time
 
 import wrappers
 
-multiprocessing.set_start_method('fork')  # this is needed for merging to work
 channel = multiprocessing.Queue()  # create a Queue
 
 

@@ -3,6 +3,10 @@ import multiprocessing
 import traceback
 from typing import *  # use type hints to make signatures clear
 
+# this is needed for merging to work
+if multiprocessing.get_start_method(True) != 'fork':
+    multiprocessing.set_start_method('fork')
+
 
 # the default function for extracting shared global variables
 def default_extract(_globals_dict: Dict[str, Any]) -> Dict[str, Any]:

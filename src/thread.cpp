@@ -39,6 +39,7 @@ void thread::start() {
     is_parent = true;
     child_pid = pid;
     started = true;
+    alive->store(true);
   } else if (pid == 0) {
     is_parent = false;
     child_pid = 0;
@@ -123,7 +124,6 @@ void thread::run() {
     abort();
   }
 
-  alive->store(true);
   try {
     ret_val = func();
     globals = extract_func(py::globals());
@@ -150,8 +150,8 @@ void thread::run() {
               .attr("format_exception_only")(e.type(), e.value()));
     }
   }
-  alive->store(false);
 
+  alive->store(false);
   snakefish_exit(0);
 }
 

@@ -58,8 +58,13 @@ py::object generator::next(bool block) {
   next_sent = false;
 
   if (py::isinstance(val, PyExc_Exception)) {
-    // raise exceptions
+    // handle exceptions
     py::object type = _channel.receive_pyobj(true);
+    py::object traceback = _channel.receive_pyobj(true);
+
+    if (!py::isinstance(val, PyExc_StopIteration)) {
+      py::print(py::str("").attr("join")(traceback));
+    }
     PyErr_SetObject(type.ptr(), val.ptr());
     throw py::error_already_set();
   } else {
@@ -161,9 +166,16 @@ void generator::run() {
         _channel.send_pyobj(e.value());
         _channel.send_pyobj(e.type());
 
-        // print stacktrace
-        e.restore();
-        PyErr_PrintEx(0);
+        // send traceback
+        if (e.trace()) {
+          _channel.send_pyobj(
+              py::module::import("traceback")
+                  .attr("format_exception")(e.type(), e.value(), e.trace()));
+        } else {
+          _channel.send_pyobj(
+              py::module::import("traceback")
+                  .attr("format_exception_only")(e.type(), e.value()));
+        }
       }
     } else {
       fprintf(stderr, "unknown command: %d!\n", cmd);

@@ -29,7 +29,7 @@ class Thread(multiprocessing.Process):
         self.ret_val = None
         self.traceback = None
 
-        def wrapped_target(args=(), kwargs={}):
+        def wrapped_target():
             # ref: https://stackoverflow.com/a/33599967
             try:
                 self.sender.send(target(*args, **kwargs))
@@ -40,7 +40,7 @@ class Thread(multiprocessing.Process):
             if self.shared_vars is not None:  # has shared global variables to merge
                 self.sender.send(extract(self.shared_vars))
 
-        super().__init__(None, wrapped_target, name, args, kwargs, daemon=daemon)
+        super().__init__(None, wrapped_target, name, daemon=daemon)
 
     def join(self, timeout=None):
         super().join(timeout)

@@ -113,12 +113,14 @@ public:
   /**
    * \brief Get the exit status of the generator.
    *
-   * \returns -1 if the generator hasn't been started yet. -2 if the generator
-   * hasn't been joined yet. -3 if the generator exited abnormally. Otherwise,
-   * the exit status given by the generator is returned.
+   * \returns The exit status of the generator. If the generator was terminated
+   * by signal `N`, `-N` would be returned.
    *
    * Note that a snakefish generator is really a process. Hence the
    * "exit status" terminology.
+   *
+   * \throws std::runtime_error If the generator hasn't been started yet OR if
+   * the thread hasn't been joined yet.
    */
   int get_exit_status();
 

@@ -103,14 +103,15 @@ bool thread::try_join() {
 }
 
 int thread::get_exit_status() {
-  if (!started) {
-    return -1;
-  } else if (!joined) {
-    return -2;
+  if (!started || !joined) {
+    throw std::runtime_error("exit status is not yet available");
   } else if (WIFEXITED(child_status)) {
     return WEXITSTATUS(child_status);
+  } else if (WIFSIGNALED(child_status)) {
+    return -WTERMSIG(child_status);
   } else {
-    return -3;
+    fprintf(stderr, "thread have neither exited nor received a signal!\n");
+    abort();
   }
 }
 

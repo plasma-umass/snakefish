@@ -103,12 +103,14 @@ public:
   /**
    * \brief Get the exit status of the thread.
    *
-   * \returns -1 if the thread hasn't been started yet. -2 if the thread hasn't
-   * been joined yet. -3 if the thread exited abnormally. Otherwise, the exit
-   * status given by the thread is returned.
+   * \returns The exit status of the thread. If the thread was terminated by
+   * signal `N`, `-N` would be returned.
    *
    * Note that a snakefish thread is really a process. Hence the "exit status"
    * terminology.
+   *
+   * \throws std::runtime_error If the thread hasn't been started yet OR if the
+   * thread hasn't been joined yet.
    */
   int get_exit_status();
 

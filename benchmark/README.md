@@ -15,6 +15,7 @@
 
 ## Benchmark Scripts
 - `binary_tree.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-python3-1.html]() (accessed 2020-04-04).
+- `fannkuch.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-python3-4.html]() (accessed 2020-04-04).
 - `mandelbrot.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-python3-7.html]() (accessed 2020-04-04).
 
 ## Helper Scripts
@@ -39,4 +40,4 @@ Example: python3 bench.py 'multiprocessing' ./multiprocessing/ 'wrappers.py'
 This does nothing. It's used by `bench.py` to get the startup overhead of the Python interpreter. The data may then be used as a baseline in analysis.
 
 ## Last Updated
-2020-04-11 c82647a386efd0eb5e4b6147a21b779b78bc6da4
+2020-04-11 5616b98265d672fb2147db77deed618fa156abcb

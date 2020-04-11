@@ -1,18 +1,40 @@
-# Benchmark Scripts
+# Benchmarks
 
-## `analysis.R`
+## Usage
+1. Run `make` in the repo root.
+2. Run `make` here (`benchmark/`).
+3. Benchmark individual scripts OR use `bench.py` to benchmark multiple scripts.
+
+**NOTE**: There's no need to repeat the first 2 steps every time unless there are new commits.
+
+## Directory Structure
+- `multiprocessing`: Scripts parallelized using `multiprocessing` and some wrappers, which can be found at [`../examples/multiprocessing/wrappers.py`]().
+- `sequential`: Scripts with no parallelism.
+- `snakefish`: Scripts parallelized using `snakefish`.
+
+## Benchmark Scripts
+- `mandelbrot.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-python3-7.html]() (accessed 2020-04-10).
+
+## Helper Scripts
+
+### `analysis.R`
 R code for plots & analysis.
 
-## `bench.py`
+### `bench.py`
+This runs multiple scripts using `hyperfine` and outputs the stats in a JSON file.
+
 Usage: python3 bench.py <bench_target> <program_path> [skip]
 
 - <bench_target>: benchmark target
 - <program_path>: where the benchmark programs are located
-- [skip]: files to skip, separated by [,]
+- [skip]: files to skip, separated by `,`
 
-Example: python3 bench.py 'multiprocessing' ../examples/multiprocessing/ 'wrappers.py'
+Example: python3 bench.py 'multiprocessing' ./multiprocessing/ 'wrappers.py'
 
 **NOTE**: [hyperfine](https://github.com/sharkdp/hyperfine) is required for `bench.py`
 
-## `dummy.py`
+### `dummy.py`
 This does nothing. It's used by `bench.py` to get the startup overhead of the Python interpreter. The data may then be used as a baseline in analysis.
+
+## Last Updated
+2020-04-10 f539fcb6272894e0b5072dd342383d24d495aad8

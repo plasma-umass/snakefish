@@ -7,3 +7,4 @@ googletest/
 pybind11/
 doc/
 *.json
+bench_output-*

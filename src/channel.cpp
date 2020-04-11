@@ -11,7 +11,7 @@ namespace snakefish {
 
 std::set<channel *> all_channels;
 
-channel::channel(const size_t size) : n_unread(), capacity(size) {
+channel::channel(const size_t size) : lock(1), n_unread(), capacity(size) {
   // imports pickle functions
   dumps = py::module::import("pickle").attr("dumps");
   loads = py::module::import("pickle").attr("loads");
@@ -22,8 +22,6 @@ channel::channel(const size_t size) : n_unread(), capacity(size) {
       util::get_shared_mem(sizeof(std::atomic_uint32_t), true));
   local_ref_cnt = static_cast<std::atomic_uint32_t *>(
       util::get_mem(sizeof(std::atomic_uint32_t)));
-  lock = static_cast<std::atomic_flag *>(
-      util::get_shared_mem(sizeof(std::atomic_flag), true));
   start = static_cast<std::atomic_size_t *>(
       util::get_shared_mem(sizeof(std::atomic_size_t), true));
   end = static_cast<std::atomic_size_t *>(
@@ -32,7 +30,6 @@ channel::channel(const size_t size) : n_unread(), capacity(size) {
       util::get_shared_mem(sizeof(std::atomic_bool), true));
 
   // initialize metadata
-  new (lock) std::atomic_flag;
   ref_cnt->store(1);
   local_ref_cnt->store(1);
   start->store(0);
@@ -77,10 +74,6 @@ channel::~channel() {
       perror("munmap() failed");
       abort();
     }
-    if (munmap(lock, sizeof(std::atomic_flag))) {
-      perror("munmap() failed");
-      abort();
-    }
     if (munmap(start, sizeof(std::atomic_size_t))) {
       perror("munmap() failed");
       abort();
@@ -94,6 +87,11 @@ channel::~channel() {
       abort();
     }
     try {
+      lock.destroy();
+    } catch (...) {
+      abort();
+    }
+    try {
       n_unread.destroy();
     } catch (...) {
       abort();
@@ -101,11 +99,10 @@ channel::~channel() {
   }
 }
 
-channel::channel(const channel &t) : n_unread(t.n_unread) {
+channel::channel(const channel &t) : lock(t.lock), n_unread(t.n_unread) {
   shared_mem = t.shared_mem;
   ref_cnt = t.ref_cnt;
   local_ref_cnt = t.local_ref_cnt;
-  lock = t.lock;
   start = t.start;
   end = t.end;
   full = t.full;
@@ -118,11 +115,11 @@ channel::channel(const channel &t) : n_unread(t.n_unread) {
   all_channels.insert(this);
 }
 
-channel::channel(channel &&t) noexcept : n_unread(std::move(t.n_unread)) {
+channel::channel(channel &&t) noexcept
+    : lock(std::move(t.lock)), n_unread(std::move(t.n_unread)) {
   shared_mem = t.shared_mem;
   ref_cnt = t.ref_cnt;
   local_ref_cnt = t.local_ref_cnt;
-  lock = t.lock;
   start = t.start;
   end = t.end;
   full = t.full;

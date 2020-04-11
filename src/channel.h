@@ -173,7 +173,7 @@ protected:
   /**
    * \brief "Mutex" for the shared memory.
    */
-  std::atomic_flag *lock;
+  semaphore_t lock;
 
   /**
    * \brief Index of first used byte.
@@ -204,15 +204,12 @@ private:
   /**
    * \brief Acquire `lock`.
    */
-  void acquire_lock() {
-    while (lock->test_and_set())
-      ;
-  }
+  void acquire_lock() { lock.wait(); }
 
   /**
    * \brief Release `lock`.
    */
-  void release_lock() { lock->clear(); }
+  void release_lock() { lock.post(); }
 
   /**
    * \brief `pickle.dumps()`

@@ -13,7 +13,8 @@
 - `snakefish`: Scripts parallelized using `snakefish`.
 
 ## Benchmark Scripts
-- `mandelbrot.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-python3-7.html]() (accessed 2020-04-10).
+- `binary_tree.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-python3-1.html]() (accessed 2020-04-04).
+- `mandelbrot.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-python3-7.html]() (accessed 2020-04-04).
 
 ## Helper Scripts
 
@@ -37,4 +38,4 @@ Example: python3 bench.py 'multiprocessing' ./multiprocessing/ 'wrappers.py'
 This does nothing. It's used by `bench.py` to get the startup overhead of the Python interpreter. The data may then be used as a baseline in analysis.
 
 ## Last Updated
-2020-04-10 f539fcb6272894e0b5072dd342383d24d495aad8
+2020-04-11 f16aab59b81c996d4c8e6b3d24c22ec2e29b15bf

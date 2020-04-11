@@ -19,6 +19,7 @@
 - `fasta.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-python3-5.html]() (accessed 2020-04-04).
 - `knucleotide.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-python3-3.html]() (accessed 2020-04-04).
 - `mandelbrot.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-python3-7.html]() (accessed 2020-04-04).
+- `regexredux.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/regexredux-python3-1.html]() (accessed 2020-04-04).
 
 ## Helper Scripts
 
@@ -42,4 +43,4 @@ Example: python3 bench.py 'multiprocessing' ./multiprocessing/ 'wrappers.py'
 This does nothing. It's used by `bench.py` to get the startup overhead of the Python interpreter. The data may then be used as a baseline in analysis.
 
 ## Last Updated
-2020-04-11 f4dbc14a9d68ac735b66ccc417781f80b88e7b77
+2020-04-11 ac6ab75c9d30cde9d9e34fc5194d16b978e4676a

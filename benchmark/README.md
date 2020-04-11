@@ -17,6 +17,7 @@
 - `binary_tree.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/binarytrees-python3-1.html]() (accessed 2020-04-04).
 - `fannkuch.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fannkuchredux-python3-4.html]() (accessed 2020-04-04).
 - `fasta.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/fasta-python3-5.html]() (accessed 2020-04-04).
+- `knucleotide.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/knucleotide-python3-3.html]() (accessed 2020-04-04).
 - `mandelbrot.py`: Adapted from [https://benchmarksgame-team.pages.debian.net/benchmarksgame/program/mandelbrot-python3-7.html]() (accessed 2020-04-04).
 
 ## Helper Scripts
@@ -41,4 +42,4 @@ Example: python3 bench.py 'multiprocessing' ./multiprocessing/ 'wrappers.py'
 This does nothing. It's used by `bench.py` to get the startup overhead of the Python interpreter. The data may then be used as a baseline in analysis.
 
 ## Last Updated
-2020-04-11 aa0eb05d92b375055e3ed53483ef05f3c3261dec
+2020-04-11 f4dbc14a9d68ac735b66ccc417781f80b88e7b77

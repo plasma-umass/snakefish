@@ -8,7 +8,8 @@
 **NOTE**: There's no need to repeat the first 2 steps every time unless there are new commits.
 
 ## Directory Structure
-- `multiprocessing`: Scripts parallelized using `multiprocessing` and some wrappers, which can be found at [`../examples/multiprocessing/wrappers.py`]().
+- `benchmarksgame`: Original scripts from [The Benchmarks Game](https://benchmarksgame-team.pages.debian.net/benchmarksgame/). There might be slight modifications to change output locations.
+- `multiprocessing`: Scripts parallelized using `multiprocessing` and some wrappers, which can be found at `examples/multiprocessing/wrappers.py`.
 - `sequential`: Scripts with no parallelism.
 - `snakefish`: Scripts parallelized using `snakefish`.
 
@@ -38,4 +39,4 @@ Example: python3 bench.py 'multiprocessing' ./multiprocessing/ 'wrappers.py'
 This does nothing. It's used by `bench.py` to get the startup overhead of the Python interpreter. The data may then be used as a baseline in analysis.
 
 ## Last Updated
-2020-04-11 f16aab59b81c996d4c8e6b3d24c22ec2e29b15bf
+2020-04-11 c82647a386efd0eb5e4b6147a21b779b78bc6da4

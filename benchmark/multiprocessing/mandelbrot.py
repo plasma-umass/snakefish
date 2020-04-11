@@ -81,7 +81,7 @@ def compute_rows(n, f):
     yield from ordered_rows(iter(unordered_rows), n)
 
 def mandelbrot(n):
-    with open("bench_output-mandelbrot_sf.bmp", mode="wb") as f:
+    with open("bench_output-mandelbrot_mp.bmp", mode="wb") as f:
         with closing(compute_rows(n, compute_row)) as rows:
             f.write("P4\n{0} {0}\n".format(n).encode())
             for row in rows:

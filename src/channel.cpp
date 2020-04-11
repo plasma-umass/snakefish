@@ -9,8 +9,6 @@
 
 namespace snakefish {
 
-std::set<channel *> all_channels;
-
 channel::channel(const size_t size) : lock(1), n_unread(), capacity(size) {
   // imports pickle functions
   dumps = py::module::import("pickle").attr("dumps");
@@ -18,10 +16,6 @@ channel::channel(const size_t size) : lock(1), n_unread(), capacity(size) {
 
   // create shared memory and relevant metadata variables
   shared_mem = util::get_shared_mem(size, false);
-  ref_cnt = static_cast<std::atomic_uint32_t *>(
-      util::get_shared_mem(sizeof(std::atomic_uint32_t), true));
-  local_ref_cnt = static_cast<std::atomic_uint32_t *>(
-      util::get_mem(sizeof(std::atomic_uint32_t)));
   start = static_cast<std::atomic_size_t *>(
       util::get_shared_mem(sizeof(std::atomic_size_t), true));
   end = static_cast<std::atomic_size_t *>(
@@ -30,19 +24,12 @@ channel::channel(const size_t size) : lock(1), n_unread(), capacity(size) {
       util::get_shared_mem(sizeof(std::atomic_bool), true));
 
   // initialize metadata
-  ref_cnt->store(1);
-  local_ref_cnt->store(1);
   start->store(0);
   end->store(0);
   full->store(false);
 
   // ensure that shared atomic variables are lock free
-  // note that atomic_flag is always lock free
-  // also note that end is of the same type as start
-  if (!ref_cnt->is_lock_free()) {
-    fprintf(stderr, "std::atomic_uint32_t is not lock free!\n");
-    abort();
-  }
+  // note that end is of the same type as start
   if (!start->is_lock_free()) {
     fprintf(stderr, "std::atomic_size_t is not lock free!\n");
     abort();
@@ -51,85 +38,6 @@ channel::channel(const size_t size) : lock(1), n_unread(), capacity(size) {
     fprintf(stderr, "std::atomic_bool is not lock free!\n");
     abort();
   }
-
-  all_channels.insert(this);
-}
-
-channel::~channel() {
-  all_channels.erase(this);
-
-  uint32_t global_cnt = ref_cnt->fetch_sub(1) - 1;
-  uint32_t local_cnt = local_ref_cnt->fetch_sub(1) - 1;
-
-  if (local_cnt == 0) {
-    free(local_ref_cnt);
-  }
-
-  if ((local_cnt == 0) && (global_cnt == 0)) {
-    if (munmap(shared_mem, capacity)) {
-      perror("munmap() failed");
-      abort();
-    }
-    if (munmap(ref_cnt, sizeof(std::atomic_uint32_t))) {
-      perror("munmap() failed");
-      abort();
-    }
-    if (munmap(start, sizeof(std::atomic_size_t))) {
-      perror("munmap() failed");
-      abort();
-    }
-    if (munmap(end, sizeof(std::atomic_size_t))) {
-      perror("munmap() failed");
-      abort();
-    }
-    if (munmap(full, sizeof(std::atomic_bool))) {
-      perror("munmap() failed");
-      abort();
-    }
-    try {
-      lock.destroy();
-    } catch (...) {
-      abort();
-    }
-    try {
-      n_unread.destroy();
-    } catch (...) {
-      abort();
-    }
-  }
-}
-
-channel::channel(const channel &t) : lock(t.lock), n_unread(t.n_unread) {
-  shared_mem = t.shared_mem;
-  ref_cnt = t.ref_cnt;
-  local_ref_cnt = t.local_ref_cnt;
-  start = t.start;
-  end = t.end;
-  full = t.full;
-  capacity = t.capacity;
-
-  // increment reference counters
-  ref_cnt->fetch_add(1);
-  local_ref_cnt->fetch_add(1);
-
-  all_channels.insert(this);
-}
-
-channel::channel(channel &&t) noexcept
-    : lock(std::move(t.lock)), n_unread(std::move(t.n_unread)) {
-  shared_mem = t.shared_mem;
-  ref_cnt = t.ref_cnt;
-  local_ref_cnt = t.local_ref_cnt;
-  start = t.start;
-  end = t.end;
-  full = t.full;
-  capacity = t.capacity;
-
-  // increment reference counters
-  ref_cnt->fetch_add(1);
-  local_ref_cnt->fetch_add(1);
-
-  all_channels.insert(this);
 }
 
 void channel::send_bytes(void *bytes, size_t len) {
@@ -277,6 +185,33 @@ py::object channel::receive_pyobj(const bool block) {
   return obj;
 }
 
-void channel::fork() { ref_cnt->fetch_add(local_ref_cnt->load()); }
+void channel::dispose() {
+  if (munmap(shared_mem, capacity)) {
+    perror("munmap() failed");
+    abort();
+  }
+  if (munmap(start, sizeof(std::atomic_size_t))) {
+    perror("munmap() failed");
+    abort();
+  }
+  if (munmap(end, sizeof(std::atomic_size_t))) {
+    perror("munmap() failed");
+    abort();
+  }
+  if (munmap(full, sizeof(std::atomic_bool))) {
+    perror("munmap() failed");
+    abort();
+  }
+  try {
+    lock.destroy();
+  } catch (...) {
+    abort();
+  }
+  try {
+    n_unread.destroy();
+  } catch (...) {
+    abort();
+  }
+}
 
 } // namespace snakefish

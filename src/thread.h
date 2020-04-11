@@ -17,6 +17,9 @@ namespace snakefish {
 
 /**
  * \brief A "thread" class for executing Python functions with true parallelism.
+ *
+ * *IMPORTANT*: The `dispose()` function must be called when a thread is no
+ * longer needed to release resources.
  */
 class thread {
 public:
@@ -26,9 +29,9 @@ public:
   thread() = delete;
 
   /**
-   * \brief Destructor.
+   * \brief Default destructor.
    */
-  ~thread();
+  ~thread() = default;
 
   /**
    * \brief No copy constructor.
@@ -120,6 +123,11 @@ public:
    */
   py::object get_result();
 
+  /**
+   * \brief Release resources held by this thread.
+   */
+  void dispose();
+
 private:
   /**
    * \brief Run the underlying function and return the result to the parent.
@@ -141,12 +149,6 @@ private:
   py::object exc_traceback;
   channel _channel;
 };
-
-/**
- * \brief A set is used to track all threads so that their destructors
- * may be called at exit.
- */
-extern std::set<thread *> all_threads;
 
 } // namespace snakefish
 

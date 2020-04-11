@@ -81,6 +81,7 @@ def compute_rows(n, f):
             except StopIteration:
                 generators[i].join()
                 assert (generators[i].get_exit_status() == 0)
+                generators[i].dispose()
                 generators.pop(i)
                 break
     yield from ordered_rows(iter(unordered_rows), n)

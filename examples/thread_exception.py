@@ -57,3 +57,6 @@ try:
 except Exception as e:
     print("exception from f(): ", type(e))
 print("global 'a' is", a)  # 'a' after update
+
+# release resources
+t.dispose()

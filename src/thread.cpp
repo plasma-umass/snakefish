@@ -1,21 +1,7 @@
 #include "thread.h"
-#include "snakefish.h"
 #include "util.h"
 
 namespace snakefish {
-
-std::set<thread *> all_threads;
-
-thread::~thread() {
-  all_threads.erase(this);
-
-  if (is_parent) {
-    if (munmap(alive, sizeof(std::atomic_bool))) {
-      perror("munmap() failed");
-      abort();
-    }
-  }
-}
 
 thread::thread(py::function f, py::function extract, py::function merge)
     : is_parent(false), child_pid(0), started(false), joined(false),
@@ -25,8 +11,6 @@ thread::thread(py::function f, py::function extract, py::function merge)
   alive = static_cast<std::atomic_bool *>(
       util::get_shared_mem(sizeof(std::atomic_bool), true));
   alive->store(false);
-
-  all_threads.insert(this);
 }
 
 void thread::start() {
@@ -34,7 +18,7 @@ void thread::start() {
     throw std::runtime_error("this thread has already been started");
   }
 
-  pid_t pid = snakefish_fork();
+  pid_t pid = fork();
   if (pid > 0) {
     is_parent = true;
     child_pid = pid;
@@ -153,7 +137,7 @@ void thread::run() {
   }
 
   alive->store(false);
-  snakefish_exit(0);
+  std::exit(0);
 }
 
 py::object thread::get_result() {
@@ -177,6 +161,14 @@ py::object thread::get_result() {
   } else {
     return ret_val;
   }
+}
+
+void thread::dispose() {
+  if (munmap(alive, sizeof(std::atomic_bool))) {
+    perror("munmap() failed");
+    abort();
+  }
+  _channel.dispose();
 }
 
 } // namespace snakefish

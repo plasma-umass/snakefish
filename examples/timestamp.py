@@ -76,3 +76,9 @@ t3.join()
 assert (t3.get_exit_status() == 0)
 print("thread #3 exit status:", t3.get_exit_status())
 print("result of f3():", t3.get_result())
+
+# release resources
+channel.dispose()
+t1.dispose()
+t2.dispose()
+t3.dispose()

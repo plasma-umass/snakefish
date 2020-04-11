@@ -41,3 +41,6 @@ assert (t.get_exit_status() == 0)
 print("thread exit status:", t.get_exit_status())
 print("result of f():", t.get_result())
 print("global 'a' is", a)  # 'a' after update
+
+# release resources
+t.dispose()

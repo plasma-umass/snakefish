@@ -66,3 +66,6 @@ print()
 assert (g.get_exit_status() == 0)
 print("generator exit status:", g.get_exit_status())
 print("global 'a' is", a)  # 'a' after update
+
+# release resources
+g.dispose()

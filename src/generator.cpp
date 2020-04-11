@@ -1,11 +1,6 @@
 #include "generator.h"
-#include "snakefish.h"
 
 namespace snakefish {
-
-std::set<generator *> all_generators;
-
-generator::~generator() { all_generators.erase(this); }
 
 generator::generator(const py::function &f, py::function extract,
                      py::function merge)
@@ -23,8 +18,6 @@ generator::generator(const py::function &f, py::function extract,
     throw std::runtime_error("f is not a generator function");
 
   _next = py::getattr(gen, "__next__");
-
-  all_generators.insert(this);
 }
 
 void generator::start() {
@@ -32,7 +25,7 @@ void generator::start() {
     throw std::runtime_error("this generator has already been started");
   }
 
-  pid_t pid = snakefish_fork();
+  pid_t pid = fork();
   if (pid > 0) {
     is_parent = true;
     child_pid = pid;
@@ -144,6 +137,11 @@ int generator::get_exit_status() {
   }
 }
 
+void generator::dispose() {
+  _channel.dispose();
+  cmd_channel.dispose();
+}
+
 void generator::run() {
   if (is_parent) {
     fprintf(stderr, "run() called by parent!\n");
@@ -186,7 +184,7 @@ void generator::run() {
 
   globals = extract_func(py::globals());
   _channel.send_pyobj(globals);
-  snakefish_exit(0);
+  std::exit(0);
 }
 
 void generator::send_cmd(generator_cmd cmd) {

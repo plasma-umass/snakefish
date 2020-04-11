@@ -40,3 +40,6 @@ print("try_join() took %s sec" % (time.time() - start))
 assert (t.get_exit_status() == 0)
 print("thread exit status:", t.get_exit_status())
 print("result of f():", t.get_result())
+
+# release resources
+t.dispose()

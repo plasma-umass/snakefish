@@ -34,12 +34,10 @@ const unsigned PICKLE_PROTOCOL = 4;
 const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
 
 /**
- * \brief An IPC channel with built-in synchronization and (semi-automatic)
- * reference counting support.
+ * \brief An IPC channel with built-in synchronization support.
  *
- * The support for reference counting is "semi-automatic" in the sense that
- * the `channel::fork()` function must be called right before calling
- * the system `fork()`.
+ * *IMPORTANT*: The `dispose()` function must be called when a channel is no
+ * longer needed to release resources.
  *
  * Characteristics of the functions:
  * - `send_bytes()`: won't block; can throw
@@ -63,14 +61,14 @@ public:
   channel() : channel(DEFAULT_CHANNEL_SIZE) {}
 
   /**
-   * \brief Destructor implementing reference counting.
+   * \brief Default destructor.
    */
-  ~channel();
+  ~channel() = default;
 
   /**
-   * \brief Copy constructor implementing reference counting.
+   * \brief Default copy constructor.
    */
-  channel(const channel &t);
+  channel(const channel &t) = default;
 
   /**
    * \brief No copy assignment operator.
@@ -78,9 +76,9 @@ public:
   channel &operator=(const channel &t) = delete;
 
   /**
-   * \brief Move constructor implementing reference counting.
+   * \brief Default move constructor.
    */
-  channel(channel &&t) noexcept;
+  channel(channel &&t) = default;
 
   /**
    * \brief No move assignment operator.
@@ -149,26 +147,15 @@ public:
   py::object receive_pyobj(bool block);
 
   /**
-   * Called by the client to indicate that this `channel` is about to be
-   * shared with another process.
+   * \brief Release resources held by this channel.
    */
-  void fork();
+  void dispose();
 
 protected:
   /**
    * \brief The buffer used to hold messages.
    */
   void *shared_mem;
-
-  /**
-   * \brief Global/interprocess reference counter.
-   */
-  std::atomic_uint32_t *ref_cnt;
-
-  /**
-   * \brief Process local reference counter.
-   */
-  std::atomic_uint32_t *local_ref_cnt;
 
   /**
    * \brief "Mutex" for the shared memory.
@@ -221,12 +208,6 @@ private:
    */
   py::object loads;
 };
-
-/**
- * \brief A set is used to track all channels so that their destructors
- * may be called at exit.
- */
-extern std::set<channel *> all_channels;
 
 } // namespace snakefish
 

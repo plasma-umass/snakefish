@@ -19,7 +19,8 @@ PYBIND11_MODULE(snakefish, m) {
       .def("try_join", &snakefish::thread::try_join)
       .def("is_alive", &snakefish::thread::is_alive)
       .def("get_exit_status", &snakefish::thread::get_exit_status)
-      .def("get_result", &snakefish::thread::get_result);
+      .def("get_result", &snakefish::thread::get_result)
+      .def("dispose", &snakefish::thread::dispose);
 
   py::class_<snakefish::generator>(m, "Generator")
       .def(py::init<py::function, py::function, py::function>())
@@ -27,13 +28,15 @@ PYBIND11_MODULE(snakefish, m) {
       .def("next", &snakefish::generator::next)
       .def("join", &snakefish::generator::join)
       .def("try_join", &snakefish::generator::try_join)
-      .def("get_exit_status", &snakefish::generator::get_exit_status);
+      .def("get_exit_status", &snakefish::generator::get_exit_status)
+      .def("dispose", &snakefish::generator::dispose);
 
   py::class_<snakefish::channel>(m, "Channel")
       .def(py::init<>())
       .def(py::init<size_t>())
       .def("send_pyobj", &snakefish::channel::send_pyobj)
-      .def("receive_pyobj", &snakefish::channel::receive_pyobj);
+      .def("receive_pyobj", &snakefish::channel::receive_pyobj)
+      .def("dispose", &snakefish::channel::dispose);
 
   m.def("get_timestamp", &get_timestamp);
   m.def("get_timestamp_serialized", &get_timestamp_serialized);

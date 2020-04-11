@@ -23,6 +23,9 @@ enum generator_cmd { NEXT, STOP };
 /**
  * \brief A "generator" class for executing Python generators with true
  * parallelism.
+ *
+ * *IMPORTANT*: The `dispose()` function must be called when a generator is no
+ * longer needed to release resources.
  */
 class generator {
 public:
@@ -32,9 +35,9 @@ public:
   generator() = delete;
 
   /**
-   * \brief Destructor.
+   * \brief Default destructor.
    */
-  ~generator();
+  ~generator() = default;
 
   /**
    * \brief No copy constructor.
@@ -124,6 +127,11 @@ public:
    */
   int get_exit_status();
 
+  /**
+   * \brief Release resources held by this generator.
+   */
+  void dispose();
+
 private:
   /**
    * \brief Run the underlying generator on demand.
@@ -155,12 +163,6 @@ private:
   bool next_sent;      // has command NEXT been sent?
   bool stop_sent;      // has command STOP been sent?
 };
-
-/**
- * \brief A set is used to track all generators so that their destructors
- * may be called at exit.
- */
-extern std::set<generator *> all_generators;
 
 } // namespace snakefish
 

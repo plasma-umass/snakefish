@@ -163,11 +163,16 @@ py::object thread::get_result() {
 
   if (py::isinstance(ret_val, PyExc_Exception)) {
     // handle exceptions
-    py::object type = _channel.receive_pyobj(true);
-    py::object traceback = _channel.receive_pyobj(true);
+    static bool exc_received = false;
+    if (!exc_received) {
+      exc_type = _channel.receive_pyobj(true);
+      exc_traceback = _channel.receive_pyobj(true);
+      exc_traceback = py::str("").attr("join")(exc_traceback);
+      exc_received = true;
+    }
 
-    py::print(py::str("").attr("join")(traceback));
-    PyErr_SetObject(type.ptr(), ret_val.ptr());
+    py::print(exc_traceback);
+    PyErr_SetObject(exc_type.ptr(), ret_val.ptr());
     throw py::error_already_set();
   } else {
     return ret_val;

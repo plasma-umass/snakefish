@@ -137,6 +137,8 @@ private:
   py::function merge_func;
   py::object ret_val;
   py::object globals;
+  py::object exc_type;
+  py::object exc_traceback;
   channel _channel;
 };
 

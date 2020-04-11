@@ -39,8 +39,7 @@ t.start()
 # try to join the thread and time it
 start = time.time()
 while True:
-    t.join(0)
-    if t.get_exit_status() is not None:
+    if t.join(0):
         print("join() successful")
         break
     else:

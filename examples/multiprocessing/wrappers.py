@@ -45,7 +45,9 @@ class Thread(multiprocessing.Process):
     def join(self, timeout=None):
         super().join(timeout)
 
-        if self.exitcode is not None:  # if joined
+        if self.exitcode is None:  # not joined
+            return False
+        else:  # joined
             self.ret_val = self.receiver.recv()
 
             if isinstance(self.ret_val, Exception):  # exception in child
@@ -53,6 +55,8 @@ class Thread(multiprocessing.Process):
 
             if self.shared_vars is not None:  # has shared global variables to merge
                 self.merge(self.shared_vars, self.receiver.recv())
+
+            return True
 
     def get_exit_status(self):
         return self.exitcode
@@ -124,9 +128,12 @@ class Generator(multiprocessing.Process):
 
         super().join(timeout)
 
-        if self.exitcode is not None:  # if joined
+        if self.exitcode is None:  # not joined
+            return False
+        else:  # joined
             if self.shared_vars is not None:  # has shared global variables to merge
                 self.merge(self.shared_vars, self.channel.get())
+            return True
 
     def get_exit_status(self):
         return self.exitcode

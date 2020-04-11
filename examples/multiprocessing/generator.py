@@ -55,8 +55,7 @@ print()
 
 # try to join the generator
 while True:
-    g.join(0)
-    if g.get_exit_status() is not None:
+    if g.join(0):
         print("join() successful")
         break
     else:

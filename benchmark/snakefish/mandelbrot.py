@@ -94,4 +94,7 @@ def mandelbrot(n):
                 f.write(row[1])
 
 if __name__ == '__main__':
-    mandelbrot(int(argv[1]))
+    if len(argv) > 1:
+        mandelbrot(int(argv[1]))
+    else:
+        mandelbrot(2000)

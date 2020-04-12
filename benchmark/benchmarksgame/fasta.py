@@ -205,4 +205,7 @@ CCACTGCACTCCAGCCTGGGCGACAGAGCGAGACTCCGTCTCAAAAA
     output_file.close()
 
 if __name__ == "__main__":
-    fasta(int(argv[1]))
+    if len(argv) > 1:
+        fasta(int(argv[1]))
+    else:
+        fasta(1000000)

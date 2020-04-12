@@ -36,8 +36,7 @@ def multiply_AtAv(u):
     )
 
 
-def main():
-    n = int(argv[1])
+def main(n):
     u = [1] * n
 
     for _ in range(10):
@@ -56,4 +55,7 @@ def main():
 
 if __name__ == '__main__':
     with Pool() as pool:
-        main()
+        if len(argv) > 1:
+            main(int(argv[1]))
+        else:
+            main(800)

@@ -1,5 +1,4 @@
 import sys
-import multiprocessing as mp
 
 
 def make_tree(d):

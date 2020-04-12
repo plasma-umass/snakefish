@@ -1,7 +1,7 @@
 from contextlib import closing
 from itertools import islice
 from os import cpu_count
-from sys import argv, stdout
+from sys import argv
 from wrappers import Generator
 import queue
 import math

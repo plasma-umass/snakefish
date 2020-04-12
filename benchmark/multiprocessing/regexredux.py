@@ -1,4 +1,3 @@
-from sys import stdin
 from re import sub, findall
 from wrappers import Thread
 

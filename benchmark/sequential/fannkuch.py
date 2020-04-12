@@ -1,6 +1,6 @@
 from sys import argv
 from math import factorial
-from multiprocessing import cpu_count, Pool
+from multiprocessing import cpu_count
 from itertools import islice, starmap
 
 def permutations(n, start, size):

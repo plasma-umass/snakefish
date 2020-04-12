@@ -1,4 +1,3 @@
-from sys import stdin
 from re import sub, findall
 
 output_file = open("bench_output-regexredux_seq.txt", mode="w")

@@ -1,4 +1,3 @@
-from itertools import repeat
 from math import sqrt
 from wrappers import Thread
 from sys import argv

@@ -1,5 +1,4 @@
 from os import cpu_count
-from sys import stdin
 from collections import defaultdict
 from itertools import starmap, chain
 from multiprocessing import Pool

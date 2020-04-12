@@ -1,7 +1,7 @@
 from contextlib import closing
 from itertools import islice
 from os import cpu_count
-from sys import argv, stdout
+from sys import argv
 
 def pixels(y, n, abs):
     range7 = bytearray(range(7))

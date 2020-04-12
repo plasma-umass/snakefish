@@ -2,7 +2,7 @@ from sys import argv
 from math import factorial
 from multiprocessing import cpu_count
 from snakefish import Thread
-from itertools import islice, starmap
+from itertools import islice
 
 def extract(_globals_dict):
     return {}

@@ -4,7 +4,7 @@ namespace snakefish {
 
 generator::generator(const py::function &f, py::function extract,
                      py::function merge)
-    : is_parent(false), child_pid(0), started(false), alive(false),
+    : is_parent(false), child_pid(0), started(false), joined(false),
       child_status(0), extract_func(std::move(extract)),
       merge_func(std::move(merge)), _channel(), cmd_channel(1024),
       next_sent(false), stop_sent(false) {
@@ -25,20 +25,15 @@ void generator::start() {
     throw std::runtime_error("this generator has already been started");
   }
 
-  _channel.fork();
-  cmd_channel.fork();
-
   pid_t pid = fork();
   if (pid > 0) {
     is_parent = true;
     child_pid = pid;
     started = true;
-    alive = true;
   } else if (pid == 0) {
     is_parent = false;
     child_pid = 0;
     started = true;
-    alive = true;
     run();
   } else {
     perror("fork() failed");
@@ -56,8 +51,13 @@ py::object generator::next(bool block) {
   next_sent = false;
 
   if (py::isinstance(val, PyExc_Exception)) {
-    // raise exceptions
+    // handle exceptions
     py::object type = _channel.receive_pyobj(true);
+    py::object traceback = _channel.receive_pyobj(true);
+
+    if (!py::isinstance(val, PyExc_StopIteration)) {
+      py::print(py::str("").attr("join")(traceback));
+    }
     PyErr_SetObject(type.ptr(), val.ptr());
     throw py::error_already_set();
   } else {
@@ -87,7 +87,7 @@ void generator::join() {
     fprintf(stderr, "joined pid = %d, child pid = %d!\n", result, child_pid);
     abort();
   } else {
-    alive = false;
+    joined = true;
     globals = _channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
   }
@@ -117,7 +117,7 @@ bool generator::try_join() {
     fprintf(stderr, "joined pid = %d, child pid = %d!\n", result, child_pid);
     abort();
   } else {
-    alive = false;
+    joined = true;
     globals = _channel.receive_pyobj(true);
     merge_func(py::globals(), globals);
     return true;
@@ -125,15 +125,21 @@ bool generator::try_join() {
 }
 
 int generator::get_exit_status() {
-  if (!started) {
-    return -1;
-  } else if (alive) {
-    return -2;
+  if (!started || !joined) {
+    throw std::runtime_error("exit status is not yet available");
   } else if (WIFEXITED(child_status)) {
     return WEXITSTATUS(child_status);
+  } else if (WIFSIGNALED(child_status)) {
+    return -WTERMSIG(child_status);
   } else {
-    return -3;
+    fprintf(stderr, "generator have neither exited nor received a signal!\n");
+    abort();
   }
+}
+
+void generator::dispose() {
+  _channel.dispose();
+  cmd_channel.dispose();
 }
 
 void generator::run() {
@@ -143,10 +149,6 @@ void generator::run() {
   }
   if (!started) {
     fprintf(stderr, "run() called but generator hasn't started yet!\n");
-    abort();
-  }
-  if (!alive) {
-    fprintf(stderr, "run() called but generator is no longer alive!\n");
     abort();
   }
 
@@ -163,9 +165,16 @@ void generator::run() {
         _channel.send_pyobj(e.value());
         _channel.send_pyobj(e.type());
 
-        // print stacktrace
-        e.restore();
-        PyErr_PrintEx(0);
+        // send traceback
+        if (e.trace()) {
+          _channel.send_pyobj(
+              py::module::import("traceback")
+                  .attr("format_exception")(e.type(), e.value(), e.trace()));
+        } else {
+          _channel.send_pyobj(
+              py::module::import("traceback")
+                  .attr("format_exception_only")(e.type(), e.value()));
+        }
       }
     } else {
       fprintf(stderr, "unknown command: %d!\n", cmd);
@@ -175,7 +184,7 @@ void generator::run() {
 
   globals = extract_func(py::globals());
   _channel.send_pyobj(globals);
-  exit(0);
+  std::exit(0);
 }
 
 void generator::send_cmd(generator_cmd cmd) {

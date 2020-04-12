@@ -17,8 +17,11 @@ namespace snakefish {
 
 /**
  * \brief A "thread" class for executing Python functions with true parallelism.
+ *
+ * *IMPORTANT*: The `dispose()` function must be called when a thread is no
+ * longer needed to release resources.
  */
-class [[gnu::visibility("hidden")]] thread {
+class thread {
 public:
   /**
    * \brief No default constructor.
@@ -43,7 +46,7 @@ public:
   /**
    * \brief No move constructor.
    */
-  thread(thread && t) = delete;
+  thread(thread &&t) = delete;
 
   /**
    * \brief No move assignment operator.
@@ -67,10 +70,7 @@ public:
    * and the second dict is the new `globals()`. The merge function must merge
    * the two by updating the first dict.
    */
-  thread(py::function f, py::function extract, py::function merge)
-      : is_parent(false), child_pid(0), started(false), alive(false),
-        child_status(0), func(std::move(f)), extract_func(std::move(extract)),
-        merge_func(std::move(merge)), _channel() {}
+  thread(py::function f, py::function extract, py::function merge);
 
   /**
    * \brief Start executing this thread. In other words, start executing the
@@ -101,17 +101,19 @@ public:
    * \returns `true` if this thread has been started and has not yet terminated;
    * `false` otherwise.
    */
-  bool is_alive() { return alive; }
+  bool is_alive() { return alive->load(); }
 
   /**
    * \brief Get the exit status of the thread.
    *
-   * \returns -1 if the thread hasn't been started yet. -2 if the thread hasn't
-   * exited yet. -3 if the thread exited abnormally. Otherwise, the exit status
-   * given by the thread is returned.
+   * \returns The exit status of the thread. If the thread was terminated by
+   * signal `N`, `-N` would be returned.
    *
    * Note that a snakefish thread is really a process. Hence the "exit status"
    * terminology.
+   *
+   * \throws std::runtime_error If the thread hasn't been started yet OR if the
+   * thread hasn't been joined yet.
    */
   int get_exit_status();
 
@@ -120,6 +122,11 @@ public:
    * function).
    */
   py::object get_result();
+
+  /**
+   * \brief Release resources held by this thread.
+   */
+  void dispose();
 
 private:
   /**
@@ -130,13 +137,16 @@ private:
   bool is_parent;
   pid_t child_pid;
   bool started;
-  bool alive;
+  std::atomic_bool *alive;
+  bool joined;
   int child_status;
   py::function func;
   py::function extract_func;
   py::function merge_func;
   py::object ret_val;
   py::object globals;
+  py::object exc_type;
+  py::object exc_traceback;
   channel _channel;
 };
 

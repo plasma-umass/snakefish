@@ -9,9 +9,10 @@ Below are some information for SnakeFish developers.
 ## Directory Structure
 ```
 .
+├── benchmark [scripts for benchmarking]
 ├── examples [Python scripts explaining usage]
+    └── multiprocessing [examples reimplemented with multiprocessing]
 └── src [C++ source code]
-    ├── snakefish [Python source code]
     └── tests [C++ unit tests]
 ```
 
@@ -27,7 +28,7 @@ Below are some information for SnakeFish developers.
 
 ## Design Decisions
 - Shared memory is used for IPC. [Unnamed semaphores](http://man7.org/linux/man-pages/man7/sem_overview.7.html) are used to implement blocking/non-blocking `receive()`. Since unnamed semaphores are not implemented on macOS ([ref 1](https://stackoverflow.com/q/27736618), [ref 2](https://stackoverflow.com/q/1413785)), named semaphores are used there instead.
-- A `std::atomic_flag` is used as a lock to synchronize shared memory access. Such usage should be safe, as `std::atomic_flag` is [always lock-free](https://en.cppreference.com/w/cpp/atomic/atomic_flag), and lock-free atomics are also address-free ([ref 1](https://stackoverflow.com/a/51463590), [ref 2](https://stackoverflow.com/a/19937333)).
+- Some atomic variables are shared between processes. Such usage should be safe as long as the shared variables are lock-free because lock-free atomics are also address-free ([ref 1](https://stackoverflow.com/a/51463590), [ref 2](https://stackoverflow.com/a/19937333)).
 - Regarding the implementation of `get_timestamp_serialized()`, see [ref 1](https://www.felixcloutier.com/x86/rdtsc), [ref 2](https://stackoverflow.com/a/13772771), [ref 3](https://stackoverflow.com/a/12634857), and [ref 4](https://stackoverflow.com/a/28307254).
 
 ## Discussion Points
@@ -36,11 +37,9 @@ Below are some information for SnakeFish developers.
 ## Issues/Caveats
 - Building the tests with `gcc` will produce 2 "undefined reference" errors. This is weird because the symbols are there if you inspect with `objdump`. This is probably due to some issue with `gcc`'s linking order ([ref 1](https://stackoverflow.com/q/16574113), [ref 2](https://stackoverflow.com/q/31286905)).
 - `pybind11` will only export instantiated versions of template functions/classes to the produced dynamic library ([ref](https://github.com/pybind/pybind11/issues/199)). This *seems* to affect not just the exposed interface but also internal code. For example, if you define a template function to be called only in your C++ code, a missing symbol error for that function would be generated at load time.
-- Building snakefish with `gcc` will produce several visibility warnings for `channel`. There is a fix to make the warnings go away, but then the tests won't build with `clang` (undefined reference errors).
 
 ## Roadmap
-- mutex
 - benchmarks & performance measurements
 
 ## Last Updated
-2020-03-30 915c40a4776059910992e3b65e0438952bbaea59
+2020-04-11 8d98df97065b5719de999387f4436ed18a9995f8

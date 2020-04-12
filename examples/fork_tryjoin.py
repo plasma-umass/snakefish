@@ -1,7 +1,7 @@
 import time
 from typing import *  # use type hints to make signatures clear
 
-import csnakefish
+import snakefish
 
 
 # the function that will be executed on a snakefish thread
@@ -22,7 +22,7 @@ def merge(_old_globals: Dict[str, Any], _new_globals: Dict[str, Any]) -> None:
 
 
 # spawn a snakefish thread
-t = csnakefish.Thread(f, extract, merge)
+t = snakefish.Thread(f, extract, merge)
 t.start()
 
 # try to join the thread and time it
@@ -40,3 +40,6 @@ print("try_join() took %s sec" % (time.time() - start))
 assert (t.get_exit_status() == 0)
 print("thread exit status:", t.get_exit_status())
 print("result of f():", t.get_result())
+
+# release resources
+t.dispose()

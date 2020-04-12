@@ -1,4 +1,4 @@
-FLAGS = -O3 -Wall -Wextra -shared -std=c++11 -fPIC
+FLAGS = -O3 -Wall -Wextra -shared -std=c++11 -fPIC -fvisibility=hidden
 
 INCLUDES = -I../include
 
@@ -14,8 +14,7 @@ SRC = buffer.cpp channel.cpp generator.cpp semaphore_t.cpp snakefish.cpp thread.
 .PHONY: snakefish clean
 
 snakefish: $(SRC)
-	g++ $(FLAGS) $(INCLUDES) $(PY_INCLUDES) $(LINKER_OPTIONS) $^ -o c$@$(OUT)
-	cp csnakefish.*.so ./snakefish
+	g++ $(FLAGS) $(INCLUDES) $(PY_INCLUDES) $(LINKER_OPTIONS) $^ -o $@$(OUT)
 
 clean:
-	rm -rf ./csnakefish.*.so
+	rm -rf ./*$(OUT)

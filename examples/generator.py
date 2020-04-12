@@ -2,7 +2,7 @@ import random
 import time
 from typing import *  # use type hints to make signatures clear
 
-import csnakefish
+import snakefish
 
 a = 1  # global variable 'a'
 
@@ -33,11 +33,8 @@ print("global 'a' was", a)
 print()
 
 # spawn a snakefish generator
-g = csnakefish.Generator(f, extract, merge)
-print("generator alive?", g.is_alive())
+g = snakefish.Generator(f, extract, merge)
 g.start()
-print("generator alive?", g.is_alive())
-print()
 
 # blocking receive
 for i in range(3):
@@ -63,10 +60,12 @@ while True:
     else:
         print("try_join() unsuccessful, sleep for 100ms")
         time.sleep(0.1)
-print("generator alive?", g.is_alive())
 print()
 
 # check exit status
 assert (g.get_exit_status() == 0)
 print("generator exit status:", g.get_exit_status())
 print("global 'a' is", a)  # 'a' after update
+
+# release resources
+g.dispose()

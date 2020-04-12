@@ -1,7 +1,7 @@
 import random
 from typing import *  # use type hints to make signatures clear
 
-import csnakefish
+import snakefish
 
 a = 1  # global variable 'a'
 
@@ -30,7 +30,7 @@ print("global 'a' was", a)
 print()
 
 # spawn a snakefish generator
-g = csnakefish.Generator(f, extract, merge)
+g = snakefish.Generator(f, extract, merge)
 g.start()
 
 # get values and check for exception
@@ -49,3 +49,6 @@ g.join()
 assert (g.get_exit_status() == 0)
 print("generator exit status:", g.get_exit_status())
 print("global 'a' is", a)  # 'a' after update
+
+# release resources
+g.dispose()

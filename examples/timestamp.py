@@ -2,9 +2,9 @@ import random
 import time
 from typing import *  # use type hints to make signatures clear
 
-import csnakefish
+import snakefish
 
-channel = csnakefish.Channel()  # create a channel
+channel = snakefish.Channel()  # create a channel
 
 
 # a function that will be executed on a snakefish thread
@@ -13,14 +13,14 @@ def f1() -> None:
         print("thread #1: sleep for 100 ms")
         time.sleep(0.1)
 
-    ts = csnakefish.get_timestamp_serialized()
+    ts = snakefish.get_timestamp_serialized()
     print("thread #1: sending an event...")
     channel.send_pyobj((ts, "explosion"))
 
 
 # a function that will be executed on a snakefish thread
 def f2() -> None:
-    ts = csnakefish.get_timestamp_serialized()
+    ts = snakefish.get_timestamp_serialized()
     print("thread #2: sending an event...")
     channel.send_pyobj((ts, "implosion"))
 
@@ -53,14 +53,9 @@ def merge(_old_globals: Dict[str, Any], _new_globals: Dict[str, Any]) -> None:
 
 
 # spawn 3 snakefish threads
-channel.fork()
-t1 = csnakefish.Thread(f1, extract, merge)
-
-channel.fork()
-t2 = csnakefish.Thread(f2, extract, merge)
-
-channel.fork()
-t3 = csnakefish.Thread(f3, extract, merge)
+t1 = snakefish.Thread(f1, extract, merge)
+t2 = snakefish.Thread(f2, extract, merge)
+t3 = snakefish.Thread(f3, extract, merge)
 
 t1.start()
 t2.start()
@@ -70,11 +65,20 @@ t3.start()
 t1.join()
 assert (t1.get_exit_status() == 0)
 print("thread #1 exit status:", t1.get_exit_status())
+print("result of f1():", t1.get_result())
 
 t2.join()
 assert (t2.get_exit_status() == 0)
 print("thread #2 exit status:", t2.get_exit_status())
+print("result of f2():", t2.get_result())
 
 t3.join()
 assert (t3.get_exit_status() == 0)
 print("thread #3 exit status:", t3.get_exit_status())
+print("result of f3():", t3.get_result())
+
+# release resources
+channel.dispose()
+t1.dispose()
+t2.dispose()
+t3.dispose()

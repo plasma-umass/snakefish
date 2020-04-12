@@ -1,3 +1,7 @@
+/**
+ * \file generator.h
+ */
+
 #ifndef SNAKEFISH_GENERATOR_H
 #define SNAKEFISH_GENERATOR_H
 
@@ -19,8 +23,11 @@ enum generator_cmd { NEXT, STOP };
 /**
  * \brief A "generator" class for executing Python generators with true
  * parallelism.
+ *
+ * *IMPORTANT*: The `dispose()` function must be called when a generator is no
+ * longer needed to release resources.
  */
-class [[gnu::visibility("hidden")]] generator {
+class generator {
 public:
   /**
    * \brief No default constructor.
@@ -45,7 +52,7 @@ public:
   /**
    * \brief No move constructor.
    */
-  generator(generator && t) = delete;
+  generator(generator &&t) = delete;
 
   /**
    * \brief No move assignment operator.
@@ -107,24 +114,23 @@ public:
   bool try_join();
 
   /**
-   * \brief Get the status of the generator.
-   *
-   * \returns `true` if this generator has been started and has not yet
-   * terminated; `false` otherwise.
-   */
-  bool is_alive() { return alive; }
-
-  /**
    * \brief Get the exit status of the generator.
    *
-   * \returns -1 if the generator hasn't been started yet. -2 if the generator
-   * hasn't exited yet. -3 if the generator exited abnormally. Otherwise, the
-   * exit status given by the generator is returned.
+   * \returns The exit status of the generator. If the generator was terminated
+   * by signal `N`, `-N` would be returned.
    *
    * Note that a snakefish generator is really a process. Hence the
    * "exit status" terminology.
+   *
+   * \throws std::runtime_error If the generator hasn't been started yet OR if
+   * the thread hasn't been joined yet.
    */
   int get_exit_status();
+
+  /**
+   * \brief Release resources held by this generator.
+   */
+  void dispose();
 
 private:
   /**
@@ -145,7 +151,7 @@ private:
   bool is_parent;
   pid_t child_pid;
   bool started;
-  bool alive;
+  bool joined;
   int child_status;
   py::object gen;   // the generator object
   py::object _next; // _next() => gen.__next__()

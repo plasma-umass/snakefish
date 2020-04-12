@@ -9,7 +9,7 @@ static inline uint64_t get_timestamp_serialized() {
   return __rdtsc();
 }
 
-PYBIND11_MODULE(csnakefish, m) {
+PYBIND11_MODULE(snakefish, m) {
   m.doc() = "true parallelism for python";
 
   py::class_<snakefish::thread>(m, "Thread")
@@ -19,7 +19,8 @@ PYBIND11_MODULE(csnakefish, m) {
       .def("try_join", &snakefish::thread::try_join)
       .def("is_alive", &snakefish::thread::is_alive)
       .def("get_exit_status", &snakefish::thread::get_exit_status)
-      .def("get_result", &snakefish::thread::get_result);
+      .def("get_result", &snakefish::thread::get_result)
+      .def("dispose", &snakefish::thread::dispose);
 
   py::class_<snakefish::generator>(m, "Generator")
       .def(py::init<py::function, py::function, py::function>())
@@ -27,15 +28,15 @@ PYBIND11_MODULE(csnakefish, m) {
       .def("next", &snakefish::generator::next)
       .def("join", &snakefish::generator::join)
       .def("try_join", &snakefish::generator::try_join)
-      .def("is_alive", &snakefish::generator::is_alive)
-      .def("get_exit_status", &snakefish::generator::get_exit_status);
+      .def("get_exit_status", &snakefish::generator::get_exit_status)
+      .def("dispose", &snakefish::generator::dispose);
 
   py::class_<snakefish::channel>(m, "Channel")
       .def(py::init<>())
       .def(py::init<size_t>())
       .def("send_pyobj", &snakefish::channel::send_pyobj)
       .def("receive_pyobj", &snakefish::channel::receive_pyobj)
-      .def("fork", &snakefish::channel::fork);
+      .def("dispose", &snakefish::channel::dispose);
 
   m.def("get_timestamp", &get_timestamp);
   m.def("get_timestamp_serialized", &get_timestamp_serialized);

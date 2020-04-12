@@ -6,6 +6,7 @@
 #define SNAKEFISH_CHANNEL_H
 
 #include <atomic>
+#include <set>
 
 #include <semaphore.h>
 
@@ -17,16 +18,26 @@ namespace py = pybind11;
 
 namespace snakefish {
 
+/**
+ * \brief The default [pickle protocol]
+ * (https://docs.python.org/3.8/library/pickle.html#data-stream-format).
+ */
 const unsigned PICKLE_PROTOCOL = 4;
+
+/**
+ * \brief The default `channel` buffer size.
+ *
+ * Note that the buffer will be allocated using `mmap()` with flag
+ * `MAP_NORESERVE`, so the actual memory consumption is much lower
+ * in general.
+ */
 const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
 
 /**
- * \brief An IPC channel with built-in synchronization and (semi-automatic)
- * reference counting support.
+ * \brief An IPC channel with built-in synchronization support.
  *
- * The support for reference counting is "semi-automatic" in the sense that
- * the `channel::fork()` function must be called right before calling
- * the system `fork()`.
+ * *IMPORTANT*: The `dispose()` function must be called when a channel is no
+ * longer needed to release resources.
  *
  * Characteristics of the functions:
  * - `send_bytes()`: won't block; can throw
@@ -50,14 +61,14 @@ public:
   channel() : channel(DEFAULT_CHANNEL_SIZE) {}
 
   /**
-   * \brief Destructor implementing reference counting.
+   * \brief Default destructor.
    */
-  ~channel();
+  ~channel() = default;
 
   /**
-   * \brief Copy constructor implementing reference counting.
+   * \brief Default copy constructor.
    */
-  channel(const channel &t);
+  channel(const channel &t) = default;
 
   /**
    * \brief No copy assignment operator.
@@ -65,9 +76,9 @@ public:
   channel &operator=(const channel &t) = delete;
 
   /**
-   * \brief Move constructor implementing reference counting.
+   * \brief Default move constructor.
    */
-  channel(channel &&t) noexcept;
+  channel(channel &&t) = default;
 
   /**
    * \brief No move assignment operator.
@@ -136,10 +147,9 @@ public:
   py::object receive_pyobj(bool block);
 
   /**
-   * Called by the client to indicate that this `channel` is about to be
-   * shared with another process.
+   * \brief Release resources held by this channel.
    */
-  void fork();
+  void dispose();
 
 protected:
   /**
@@ -148,34 +158,24 @@ protected:
   void *shared_mem;
 
   /**
-   * \brief Global/interprocess reference counter.
-   */
-  std::atomic_uint32_t *ref_cnt;
-
-  /**
-   * \brief Process local reference counter.
-   */
-  std::atomic_uint32_t *local_ref_cnt;
-
-  /**
    * \brief "Mutex" for the shared memory.
    */
-  std::atomic_flag *lock;
+  semaphore_t lock;
 
   /**
    * \brief Index of first used byte.
    */
-  size_t *start;
+  std::atomic_size_t *start;
 
   /**
    * \brief Index of first unused byte.
    */
-  size_t *end;
+  std::atomic_size_t *end;
 
   /**
    * \brief A flag indicating whether this buffer is full.
    */
-  bool *full;
+  std::atomic_bool *full;
 
   /**
    * \brief Number of unread messages.
@@ -191,15 +191,12 @@ private:
   /**
    * \brief Acquire `lock`.
    */
-  void acquire_lock() {
-    while (lock->test_and_set())
-      ;
-  }
+  void acquire_lock() { lock.wait(); }
 
   /**
    * \brief Release `lock`.
    */
-  void release_lock() { lock->clear(); }
+  void release_lock() { lock.post(); }
 
   /**
    * \brief `pickle.dumps()`

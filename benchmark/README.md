@@ -10,6 +10,7 @@
 ## Directory Structure
 - `benchmarksgame`: Original scripts from [The Benchmarks Game](https://benchmarksgame-team.pages.debian.net/benchmarksgame/). There might be slight modifications to change output locations.
 - `multiprocessing`: Scripts parallelized using `multiprocessing` and some wrappers, which can be found at `examples/multiprocessing/wrappers.py`.
+- `output`: Sample outputs obtained from [The Benchmarks Game](https://benchmarksgame-team.pages.debian.net/benchmarksgame/) for validation purposes (see `validation.py`). The official `mandelbrot-output.txt` seems to be incorrect, so it's not used. Accessed 2020-04-11.
 - `sequential`: Scripts with no parallelism.
 - `snakefish`: Scripts parallelized using `snakefish`.
 
@@ -43,5 +44,8 @@ Example: python3 bench.py 'multiprocessing' ./multiprocessing/ 'wrappers.py'
 ### `dummy.py`
 This does nothing. It's used by `bench.py` to get the startup overhead of the Python interpreter. The data may then be used as a baseline in analysis.
 
+### `validation.py`
+This (hopefully) validates that all benchmark scripts are behaving as expected.
+
 ## Last Updated
-2020-04-11 f8678c5e76a8d98748d7777b057e4c8920dbbd0f
+2020-04-11 717ac7823fc13879a628c8e2dc46f3ef40ae10c4

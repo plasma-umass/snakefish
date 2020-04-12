@@ -11,7 +11,7 @@ if len(sys.argv) < 3:
     print("\t- <bench_target>: benchmark target")
     print("\t- <program_path>: where the benchmark programs are located")
     print("\t- [skip]: files to skip, separated by [,]")
-    print("\nExample: python3 bench.py 'multiprocessing' ../examples/multiprocessing/ 'wrappers.py'")
+    print("\nExample: python3 bench.py 'multiprocessing' ./multiprocessing/ 'wrappers.py'")
     sys.exit(1)
 else:
     bench_target = sys.argv[1]
@@ -39,7 +39,8 @@ for (bench_name, file_path) in programs:
 
     result = subprocess.run(
         ["hyperfine",
-         "--warmup", str(5),
+         "--warmup", str(3),
+         "--min-runs", str(5),
          "--max-runs", str(50),
          "--export-json", json_file,
          "/usr/bin/python3 %s" % file_path],

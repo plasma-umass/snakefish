@@ -28,11 +28,13 @@ Below are some information for SnakeFish developers.
 
 ## Design Decisions
 - Shared memory is used for IPC. [Unnamed semaphores](http://man7.org/linux/man-pages/man7/sem_overview.7.html) are used to implement blocking/non-blocking `receive()`. Since unnamed semaphores are not implemented on macOS ([ref 1](https://stackoverflow.com/q/27736618), [ref 2](https://stackoverflow.com/q/1413785)), named semaphores are used there instead.
+- Since growing shared memory after `fork()` is difficult ([ref 1](https://stackoverflow.com/q/16423789), [ref 2](https://stackoverflow.com/q/49266193)), a 2 GiB chunk of shared memory is allocated by each `channel` to avoid resizing. The allocation is done through `mmap()` with `MAP_NORESERVE`, so we don't actually use 2 GiB of memory right away.
 - Some atomic variables are shared between processes. Such usage should be safe as long as the shared variables are lock-free because lock-free atomics are also address-free ([ref 1](https://stackoverflow.com/a/51463590), [ref 2](https://stackoverflow.com/a/19937333)).
 - Regarding the implementation of `get_timestamp_serialized()`, see [ref 1](https://www.felixcloutier.com/x86/rdtsc), [ref 2](https://stackoverflow.com/a/13772771), [ref 3](https://stackoverflow.com/a/12634857), and [ref 4](https://stackoverflow.com/a/28307254).
 
 ## Discussion Points
 - Better way to IPC objects than `pickle`? Currently, `dumps()` is used to serialize Python objects into `bytes`, which can be converted into byte buffers (`void *`) accessible in C++ ([ref 1](https://docs.python.org/3.8/c-api/memoryview.html), [ref 2](https://docs.python.org/3.8/c-api/buffer.html#buffer-structure)). Deserialization is done in a similar way using `loads()`. This means sending an Python object to another process takes at least 4 copying.
+- As mentioned above, snakefish currently over-allocates shared memory to avoid resizing, which is not ideal. If resizing ever needs to be implemented, one possibility is to use `ftruncate()` + `munmap()` + `mmap()` ([ref](https://stackoverflow.com/q/49266193)). We might also want to reference [Boost's implementation](https://github.com/boostorg/interprocess/tree/develop/include/boost/interprocess).
 
 ## Issues/Caveats
 - Building the tests with `gcc` will produce 2 "undefined reference" errors. This is weird because the symbols are there if you inspect with `objdump`. This is probably due to some issue with `gcc`'s linking order ([ref 1](https://stackoverflow.com/q/16574113), [ref 2](https://stackoverflow.com/q/31286905)).
@@ -42,4 +44,4 @@ Below are some information for SnakeFish developers.
 - benchmarks & performance measurements
 
 ## Last Updated
-2020-04-11 8d98df97065b5719de999387f4436ed18a9995f8
+2020-04-26 8f83a793fb790f000e865ecb9e07cefb962fbaaf

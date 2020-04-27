@@ -1,6 +1,6 @@
-# SnakeFish Dev Doc
+# snakefish Dev Doc
 
-Below are some information for SnakeFish developers.
+Below are some information for snakefish developers.
 
 ## Getting Started
 1. Since the tests rely on pybind11's [interpreter embedding](https://pybind11.readthedocs.io/en/master/advanced/embedding.html), `CMake` is required for building the tests.
@@ -10,11 +10,16 @@ Below are some information for SnakeFish developers.
 ```
 .
 ├── benchmark [scripts for benchmarking]
-├── examples [Python scripts explaining usage]
-    └── multiprocessing [examples reimplemented with multiprocessing]
+├── examples [Python scripts demonstrating usage]
+│   └── multiprocessing [examples reimplemented with multiprocessing]
 └── src [C++ source code]
     └── tests [C++ unit tests]
 ```
+
+## How to View Documentation
+1. Install [Doxygen](http://doxygen.nl/) and [Graphviz](https://graphviz.org/).
+2. Run `doxygen Doxyfile` in the repo root.
+3. Open `doc/html/index.html`.
 
 ## How to Build & Run Tests
 1. Run `make dev_dependency` in the repo root.
@@ -24,7 +29,7 @@ Below are some information for SnakeFish developers.
 
 **NOTE**: For now, tests only build with `clang`. See below in the [Issues/Caveats](#issuescaveats) section for an explanation.
 
-**NOTE 2**: If you want to clean the build directory, run `cmake --build cmake-build-debug --target clean -- -j 4`. That alone doesn't purge CMake's cache, so sometimes you might need `rm -rf cmake-build-debug`
+**NOTE 2**: If you want to clean the build directory, run `cmake --build cmake-build-debug --target clean -- -j 4`. That alone doesn't purge CMake's cache, so sometimes you might need `rm -rf cmake-build-debug`.
 
 ## Design Decisions
 - Shared memory is used for IPC. [Unnamed semaphores](http://man7.org/linux/man-pages/man7/sem_overview.7.html) are used to implement blocking/non-blocking `receive()`. Since unnamed semaphores are not implemented on macOS ([ref 1](https://stackoverflow.com/q/27736618), [ref 2](https://stackoverflow.com/q/1413785)), named semaphores are used there instead.
@@ -41,7 +46,6 @@ Below are some information for SnakeFish developers.
 - `pybind11` will only export instantiated versions of template functions/classes to the produced dynamic library ([ref](https://github.com/pybind/pybind11/issues/199)). This *seems* to affect not just the exposed interface but also internal code. For example, if you define a template function to be called only in your C++ code, a missing symbol error for that function would be generated at load time.
 
 ## Roadmap
-- benchmarks & performance measurements
 
 ## Last Updated
-2020-04-26 8f83a793fb790f000e865ecb9e07cefb962fbaaf
+2020-04-27 b39b606ae85f964e2d48baa2dd463657e9d2f949

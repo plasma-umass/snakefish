@@ -16,7 +16,7 @@ namespace py = pybind11;
 namespace snakefish {
 
 /**
- * \brief An enum type to make generator IPC cleaner.
+ * \brief An enum type used to make generator IPC cleaner.
  */
 enum generator_cmd { NEXT, STOP };
 
@@ -24,8 +24,8 @@ enum generator_cmd { NEXT, STOP };
  * \brief A "generator" class for executing Python generators with true
  * parallelism.
  *
- * *IMPORTANT*: The `dispose()` function must be called when a generator is no
- * longer needed to release resources.
+ * **IMPORTANT**: The `dispose()` function must be called when a generator is
+ * no longer needed to release resources.
  */
 class generator {
 public:
@@ -66,16 +66,20 @@ public:
    * [generator function](https://wiki.python.org/moin/Generators).
    *
    * \param extract The globals extraction function this generator will execute.
-   * Its signature should be `(dict) -> dict`. It should take the current
+   * Its signature should be `(dict) -> dict`. It should take the child's
    * `globals()` and return a dict of globals that must be kept. The
    * returned dict will be passed to `merge` as the second parameter. Note that
    * anything contained in the returned dict must be [picklable]
    * (https://docs.python.org/3/library/pickle.html#what-can-be-pickled-and-unpickled).
    *
    * \param merge The merge function this generator will execute. Its signature
-   * should be `(dict, dict) -> nil`. The first dict is the current `globals()`,
-   * and the second dict is the new `globals()`. The merge function must merge
-   * the two by updating the first dict.
+   * should be `(dict, dict) -> nil`. The first dict is the parent's
+   * `globals()`, and the second dict is the one returned by `extract()`. The
+   * merge function must merge the two by updating the first dict.
+   *
+   * Note that `extract()` is executed by the child process, and `merge` is
+   * executed by the parent process. The return value of `extract()` is sent
+   * to the parent through IPC.
    *
    * \throws std::runtime_error If `f` is not a generator function.
    */
@@ -83,6 +87,9 @@ public:
 
   /**
    * \brief Start executing this generator.
+   *
+   * \throws std::runtime_error If this generator has already been started OR
+   * if `fork()` failed.
    */
   void start();
 
@@ -93,14 +100,17 @@ public:
    *
    * \throws std::out_of_range If the next output isn't ready yet (only applies
    * when `block` is `false`).
+   * \throws e `next()` will rethrow any exception thrown by the generator.
    */
   py::object next(bool block);
 
   /**
    * \brief Join this generator.
    *
-   * This will block the calling thread until this generator terminates. If the
-   * generator hasn't been started yet, this function will throw an exception.
+   * This will block the caller until this generator terminates.
+   *
+   * \throws std::runtime_error If this generator hasn't been started yet OR if
+   * `waitpid()` failed.
    */
   void join();
 
@@ -110,6 +120,9 @@ public:
    * This is the non-blocking version of `join()`.
    *
    * \returns `true` if joined. `false` otherwise.
+   *
+   * \throws std::runtime_error If this generator hasn't been started yet OR if
+   * `waitpid()` failed.
    */
   bool try_join();
 
@@ -123,7 +136,7 @@ public:
    * "exit status" terminology.
    *
    * \throws std::runtime_error If the generator hasn't been started yet OR if
-   * the thread hasn't been joined yet.
+   * the generator hasn't been joined yet.
    */
   int get_exit_status();
 

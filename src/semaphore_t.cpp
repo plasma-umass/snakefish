@@ -10,6 +10,7 @@ namespace snakefish {
 
 #ifdef __APPLE__
 semaphore_t::semaphore_t(unsigned int val) : name("/snakefish-") {
+  // randomly generate a semaphore name
   name.append(std::to_string(getpid()));
   name.append("-");
   name.append(std::to_string(util::get_random_uint()));

@@ -28,8 +28,9 @@ public:
   /**
    * \brief Create a semaphore with initial value 0.
    *
-   * \throws std::runtime_error If `sem_init()` or `sem_open()` failed (check
-   * `errno` for details).
+   * \throws std::runtime_error If `sem_init()` or `sem_open()` failed. Check
+   * `errno` for details.
+   * \throws std::bad_alloc If `mmap()` failed. This will NOT happen on macOS.
    */
   semaphore_t() : semaphore_t(0) {}
 
@@ -61,8 +62,9 @@ public:
   /**
    * \brief Create a semaphore with initial value `val`.
    *
-   * \throws std::runtime_error If `sem_init()` or `sem_open()` failed.
-   * \throws std::bad_alloc If `mmap()` failed.
+   * \throws std::runtime_error If `sem_init()` or `sem_open()` failed. Check
+   * `errno` for details.
+   * \throws std::bad_alloc If `mmap()` failed. This will NOT happen on macOS.
    */
   explicit semaphore_t(unsigned int val);
 

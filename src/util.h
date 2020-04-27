@@ -1,3 +1,7 @@
+/**
+ * \file util.h
+ */
+
 #ifndef SNAKEFISH_UTIL_H
 #define SNAKEFISH_UTIL_H
 
@@ -11,6 +15,9 @@ namespace snakefish {
 
 namespace util {
 
+/**
+ * \brief Randomly generate an `uint`.
+ */
 static inline uint64_t get_random_uint() {
   static std::random_device rd;
   static std::mt19937 rng(rd());
@@ -18,6 +25,16 @@ static inline uint64_t get_random_uint() {
   return dist(rng);
 }
 
+/**
+ * \brief Use `malloc()` to allocate some memory.
+ *
+ * \param len Number of bytes to allocate.
+ *
+ * \returns Pointer to the start of the allocated memory, which is `null` if
+ * `len` is 0.
+ *
+ * \throws std::bad_alloc If `malloc()` failed.
+ */
 static inline void *get_mem(const size_t len) {
   // no-op
   if (len == 0)
@@ -32,6 +49,17 @@ static inline void *get_mem(const size_t len) {
   }
 }
 
+/**
+ * \brief Use `mmap()` to allocate some shared memory.
+ *
+ * \param len Number of bytes to allocate.
+ * \param reserve If `false`, use flag `MAP_NORESERVE`.
+ *
+ * \returns Pointer to the start of the allocated memory, which is `null` if
+ * `len` is 0.
+ *
+ * \throws std::bad_alloc If `mmap()` failed.
+ */
 static inline void *get_shared_mem(const size_t len, const bool reserve) {
   // no-op
   if (len == 0)

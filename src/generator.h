@@ -21,8 +21,7 @@ namespace snakefish {
 enum generator_cmd { NEXT, STOP };
 
 /**
- * \brief A "generator" class for executing Python generators with true
- * parallelism.
+ * \brief A class for executing Python generators with true parallelism.
  *
  * **IMPORTANT**: The `dispose()` function must be called when a generator is
  * no longer needed to release resources.

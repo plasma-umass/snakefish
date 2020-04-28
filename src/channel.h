@@ -36,6 +36,11 @@ const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
 /**
  * \brief An IPC channel with built-in synchronization support.
  *
+ * All messages are exchanged through the same buffer, so the communication is
+ * not multiplexed. As such, `channel` should only be used for uni-directional
+ * communication in most cases. Having multiple senders and/or multiple
+ * receivers may or may not work, depending on the use cases.
+ *
  * **IMPORTANT**: The `dispose()` function must be called when a channel is no
  * longer needed to release resources.
  *

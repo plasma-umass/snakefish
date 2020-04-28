@@ -16,7 +16,7 @@ namespace py = pybind11;
 namespace snakefish {
 
 /**
- * \brief A "thread" class for executing Python functions with true parallelism.
+ * \brief A class for executing Python functions with true parallelism.
  *
  * **IMPORTANT**: The `dispose()` function must be called when a thread is no
  * longer needed to release resources.

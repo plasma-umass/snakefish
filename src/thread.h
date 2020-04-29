@@ -58,7 +58,7 @@ public:
    *
    * \param f The Python function this thread will execute.
    */
-  thread(py::function f);
+  explicit thread(py::function f);
 
   /**
    * \brief Create a new snakefish thread with global variable merging.

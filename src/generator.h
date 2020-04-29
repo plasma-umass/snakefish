@@ -66,7 +66,7 @@ public:
    *
    * \throws std::runtime_error If `f` is not a generator function.
    */
-  generator(const py::function &f);
+  explicit generator(const py::function &f);
 
   /**
    * \brief Create a new snakefish generator with global variable merging.

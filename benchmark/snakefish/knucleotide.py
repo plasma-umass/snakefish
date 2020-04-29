@@ -5,12 +5,6 @@ from snakefish import Thread
 
 lean_buffer = {}
 
-def extract(_globals_dict):
-    return {}
-
-def merge(_old_globals, _new_globals):
-    pass
-
 def lean_args(sequence, reading_frames, i, j):
     global lean_buffer
 
@@ -173,7 +167,7 @@ def main():
     lean_jobs = list(starmap(lean_args, count_jobs))
     threads = []
     for job in lean_jobs:
-        t = Thread(lambda: lean_call(count_frequencies)(*job), extract, merge)
+        t = Thread(lambda: lean_call(count_frequencies)(*job))
         t.start()
         threads.append(t)
 

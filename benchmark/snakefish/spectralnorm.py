@@ -5,14 +5,6 @@ import os
 import math
 
 
-def extract(_globals_dict):
-    return {}
-
-
-def merge(_old_globals, _new_globals):
-    pass
-
-
 def eval_A(i, j):
     ij = i + j
     return 1.0 / (ij * (ij + 1) / 2 + i + 1)
@@ -43,7 +35,7 @@ def multiply_AtAv(u):
     jobs_per_thread = math.ceil(len(u) / os.cpu_count())
     for i in range(0, len(u), jobs_per_thread):
         r_slice = r[i:(i+jobs_per_thread)]
-        t = Thread(lambda: thread_func(A_sum, u, r_slice), extract, merge)
+        t = Thread(lambda: thread_func(A_sum, u, r_slice))
         t.start()
         threads.append(t)
 
@@ -59,7 +51,7 @@ def multiply_AtAv(u):
 
     for i in range(0, len(u), jobs_per_thread):
         r_slice = r[i:(i+jobs_per_thread)]
-        t = Thread(lambda: thread_func(At_sum, tmp, r_slice), extract, merge)
+        t = Thread(lambda: thread_func(At_sum, tmp, r_slice))
         t.start()
         threads.append(t)
 

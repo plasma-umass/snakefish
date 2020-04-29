@@ -4,14 +4,6 @@ from snakefish import Thread
 from os import cpu_count
 
 
-def extract(_globals_dict):
-    return {}
-
-
-def merge(_old_globals, _new_globals):
-    pass
-
-
 def make_tree(d):
 
     if d > 0:
@@ -72,7 +64,7 @@ def main(n, min_depth=4):
             threads = []
             for k in range(0, len(argchunk), jobs_per_thread):
                 jobs = argchunk[k:(k+jobs_per_thread)]
-                t = Thread(lambda: thread_func(jobs), extract, merge)
+                t = Thread(lambda: thread_func(jobs))
                 t.start()
                 threads.append(t)
 

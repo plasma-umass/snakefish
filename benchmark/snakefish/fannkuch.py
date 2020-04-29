@@ -4,12 +4,6 @@ from multiprocessing import cpu_count
 from snakefish import Thread
 from itertools import islice
 
-def extract(_globals_dict):
-    return {}
-
-def merge(_old_globals, _new_globals):
-    pass
-
 def permutations(n, start, size):
     p = bytearray(range(n))
     count = bytearray(n)
@@ -96,7 +90,7 @@ def fannkuch(n):
 
         threads = []
         for i in range(task_count):
-            t = Thread(lambda: task(*task_args[i]), extract, merge)
+            t = Thread(lambda: task(*task_args[i]))
             t.start()
             threads.append(t)
 

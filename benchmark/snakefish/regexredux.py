@@ -3,12 +3,6 @@ from snakefish import Thread
 
 output_file = open("bench_output-regexredux_sf.txt", mode="w")
 
-def extract(_globals_dict):
-    return {}
-
-def merge(_old_globals, _new_globals):
-    pass
-
 def var_find(f):
     return len(findall(f, seq))
 
@@ -34,7 +28,7 @@ def main():
 
     threads = []
     for i, variant in enumerate(variants):
-        t = Thread(lambda: var_find(variant), extract, merge)
+        t = Thread(lambda: var_find(variant))
         t.start()
         threads.append((i, t))
 

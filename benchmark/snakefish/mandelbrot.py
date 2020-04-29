@@ -5,12 +5,6 @@ from sys import argv
 from snakefish import Generator
 import math
 
-def extract(_globals_dict):
-    return {}
-
-def merge(_old_globals, _new_globals):
-    pass
-
 def pixels(y, n, abs):
     range7 = bytearray(range(7))
     pixel_bits = bytearray(128 >> pos for pos in range(8))
@@ -67,7 +61,7 @@ def compute_rows(n, f):
         jobs = list(row_jobs[i:(i+jobs_per_generator)])
         def f():
             yield from generator_compute_rows(jobs)
-        g = Generator(f, extract, merge)
+        g = Generator(f)
         g.start()
         generators.append(g)
 

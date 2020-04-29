@@ -3,10 +3,22 @@
 
 namespace snakefish {
 
+thread::thread(py::function f)
+    : is_parent(false), child_pid(0), started(false), joined(false),
+      child_status(0), func(std::move(f)), extract_func(), merge_func(),
+      _channel(), merging(false) {
+
+  // create shared memory
+  alive = static_cast<std::atomic_bool *>(
+      util::get_shared_mem(sizeof(std::atomic_bool), true));
+  alive->store(false);
+}
+
 thread::thread(py::function f, py::function extract, py::function merge)
     : is_parent(false), child_pid(0), started(false), joined(false),
       child_status(0), func(std::move(f)), extract_func(std::move(extract)),
-      merge_func(std::move(merge)), _channel() {
+      merge_func(std::move(merge)), _channel(), merging(true) {
+
   // create shared memory
   alive = static_cast<std::atomic_bool *>(
       util::get_shared_mem(sizeof(std::atomic_bool), true));
@@ -53,9 +65,13 @@ void thread::join() {
     abort();
   } else {
     joined = true;
-    globals = _channel.receive_pyobj(true);
-    ret_val = _channel.receive_pyobj(true);
-    merge_func(py::globals(), globals);
+    if (merging) {
+      globals = _channel.receive_pyobj(true);
+      ret_val = _channel.receive_pyobj(true);
+      merge_func(py::globals(), globals);
+    } else {
+      ret_val = _channel.receive_pyobj(true);
+    }
   }
 }
 
@@ -79,9 +95,13 @@ bool thread::try_join() {
     abort();
   } else {
     joined = true;
-    globals = _channel.receive_pyobj(true);
-    ret_val = _channel.receive_pyobj(true);
-    merge_func(py::globals(), globals);
+    if (merging) {
+      globals = _channel.receive_pyobj(true);
+      ret_val = _channel.receive_pyobj(true);
+      merge_func(py::globals(), globals);
+    } else {
+      ret_val = _channel.receive_pyobj(true);
+    }
     return true;
   }
 }
@@ -111,14 +131,17 @@ void thread::run() {
 
   try {
     ret_val = func();
-    globals = extract_func(py::globals());
-
-    _channel.send_pyobj(globals);
+    if (merging) {
+      globals = extract_func(py::globals());
+      _channel.send_pyobj(globals);
+    }
     _channel.send_pyobj(ret_val);
   } catch (py::error_already_set &e) {
     // send globals
-    globals = extract_func(py::globals());
-    _channel.send_pyobj(globals);
+    if (merging) {
+      globals = extract_func(py::globals());
+      _channel.send_pyobj(globals);
+    }
 
     // send exceptions to parent
     _channel.send_pyobj(e.value());

@@ -59,7 +59,17 @@ public:
   generator &operator=(generator &&t) = delete;
 
   /**
-   * \brief Create a new snakefish generator.
+   * \brief Create a new snakefish generator with no global variable merging.
+   *
+   * \param f The Python function this generator will execute. It must be a
+   * [generator function](https://wiki.python.org/moin/Generators).
+   *
+   * \throws std::runtime_error If `f` is not a generator function.
+   */
+  generator(const py::function &f);
+
+  /**
+   * \brief Create a new snakefish generator with global variable merging.
    *
    * \param f The Python function this generator will execute. It must be a
    * [generator function](https://wiki.python.org/moin/Generators).
@@ -174,6 +184,7 @@ private:
   channel cmd_channel; // channel used to send commands
   bool next_sent;      // has command NEXT been sent?
   bool stop_sent;      // has command STOP been sent?
+  bool merging;        // should globals be merged?
 };
 
 } // namespace snakefish

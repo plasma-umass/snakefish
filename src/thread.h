@@ -54,7 +54,14 @@ public:
   thread &operator=(thread &&t) = delete;
 
   /**
-   * \brief Create a new snakefish thread.
+   * \brief Create a new snakefish thread with no global variable merging.
+   *
+   * \param f The Python function this thread will execute.
+   */
+  thread(py::function f);
+
+  /**
+   * \brief Create a new snakefish thread with global variable merging.
    *
    * \param f The Python function this thread will execute.
    *
@@ -164,6 +171,7 @@ private:
   py::object exc_type;
   py::object exc_traceback;
   channel _channel;
+  bool merging; // should globals be merged?
 };
 
 } // namespace snakefish

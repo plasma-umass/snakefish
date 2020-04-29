@@ -13,6 +13,7 @@ PYBIND11_MODULE(snakefish, m) {
   m.doc() = "true parallelism for python";
 
   py::class_<snakefish::thread>(m, "Thread")
+      .def(py::init<py::function>())
       .def(py::init<py::function, py::function, py::function>())
       .def("start", &snakefish::thread::start)
       .def("join", &snakefish::thread::join)
@@ -23,6 +24,7 @@ PYBIND11_MODULE(snakefish, m) {
       .def("dispose", &snakefish::thread::dispose);
 
   py::class_<snakefish::generator>(m, "Generator")
+      .def(py::init<py::function>())
       .def(py::init<py::function, py::function, py::function>())
       .def("start", &snakefish::generator::start)
       .def("next", &snakefish::generator::next)

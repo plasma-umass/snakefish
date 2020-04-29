@@ -75,8 +75,17 @@ A class for executing Python generators with true parallelism.
 
 **IMPORTANT**: The `dispose()` function must be called when a generator is no longer needed to release resources.
 
+#### `Generator(f) -> obj`
+Create a new snakefish generator with no global variable merging.
+
+Params:
+- `f`: The Python function this generator will execute. It must be a [generator function](https://wiki.python.org/moin/Generators).
+
+Throws:
+- `RuntimeError`: If `f` is not a generator function.
+
 #### `Generator(f, extract, merge) -> obj`
-Create a new snakefish generator.
+Create a new snakefish generator with global variable merging.
 
 Params:
 - `f`: The Python function this generator will execute. It must be a [generator function](https://wiki.python.org/moin/Generators).
@@ -127,8 +136,14 @@ A class for executing Python functions with true parallelism.
 
 **IMPORTANT**: The `dispose()` function must be called when a thread is no longer needed to release resources.
 
+#### `Thread(f) -> obj`
+Create a new snakefish thread with no global variable merging.
+
+Params:
+- `f`: The Python function this thread will execute.
+
 #### `Thread(f, extract, merge) -> obj`
-Create a new snakefish thread.
+Create a new snakefish thread with global variable merging.
 
 Params:
 - `f`: The Python function this thread will execute.
@@ -189,4 +204,4 @@ Like `get_timestamp()`, but with `lfence` and compiler fence applied. For most u
 See the [development documentation](dev_doc.md).
 
 ## Last Updated
-2020-04-27 52d2092a69ee3aa949140d1b88735da66fb7e7f5
+2020-04-28 1457cf76f98cba49702709d2b27a25057eff4d88

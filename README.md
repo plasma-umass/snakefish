@@ -197,6 +197,46 @@ Get a high resolution timestamp obtained from [`rdtsc`](https://www.felixcloutie
 #### `get_timestamp_serialized() -> int`
 Like `get_timestamp()`, but with `lfence` and compiler fence applied. For most use cases, this is probably not needed, and `get_timestamp()` would be sufficient.
 
+#### `map(f, args, concurrency=0, chunksize=0) -> list`
+`map(f, args)` executed in parallel, with no global variable merging. Results are returned in a list.
+
+Params
+- `f`: The Python function that should be applied to each argument.
+- `args`: The arguments as a Python iterable.
+- `concurrency`: The level of concurrency. If not supplied, this is set to the number of cores in the system.
+- `chunksize`: The size of each process' job. If not supplied, `args` are handed out evenly to each process.
+
+#### `map(f, args, extract, merge, concurrency=0, chunksize=0) -> list`
+`map(f, args)` executed in parallel, with global variable merging. Results are returned in a list.
+
+Params
+- `f`: The Python function that should be applied to each argument.
+- `args`: The arguments as a Python iterable.
+- `extract`: See `Thread` constructor.
+- `merge`: See `Thread` constructor.
+- `concurrency`: The level of concurrency. If not supplied, this is set to the number of cores in the system.
+- `chunksize`: The size of each process' job. If not supplied, `args` are handed out evenly to each process.
+
+#### `starmap(f, args, concurrency=0, chunksize=0) -> list`
+`starmap(f, args)` executed in parallel, with no global variable merging. Results are returned in a list.
+
+Params
+- `f`: The Python function that should be applied to each argument (after unpacking).
+- `args`: The arguments as a Python iterable.
+- `concurrency`: The level of concurrency. If not supplied, this is set to the number of cores in the system.
+- `chunksize`: The size of each process' job. If not supplied, `args` are handed out evenly to each process.
+
+#### `starmap(f, args, extract, merge, concurrency=0, chunksize=0) -> list`
+`starmap(f, args)` executed in parallel, with global variable merging. Results are returned in a list.
+
+Params
+- `f`: The Python function that should be applied to each argument (after unpacking).
+- `args`: The arguments as a Python iterable.
+- `extract`: See `Thread` constructor.
+- `merge`: See `Thread` constructor.
+- `concurrency`: The level of concurrency. If not supplied, this is set to the number of cores in the system.
+- `chunksize`: The size of each process' job. If not supplied, `args` are handed out evenly to each process.
+
 ## Caveats
 - [fork(2)](http://man7.org/linux/man-pages/man2/fork.2.html): "After a `fork()` in a multithreaded program, the child can safely call only async-signal-safe functions (see [signal-safety(7)](http://man7.org/linux/man-pages/man7/signal-safety.7.html)) until such time as it calls execve(2)." As such, users must ensure that their code, including its imported modules, either doesn't create threads or doesn't call non-async-signal-safe functions (e.g. `malloc()` and `printf()`).
 
@@ -204,4 +244,4 @@ Like `get_timestamp()`, but with `lfence` and compiler fence applied. For most u
 See the [development documentation](dev_doc.md).
 
 ## Last Updated
-2020-04-28 1457cf76f98cba49702709d2b27a25057eff4d88
+2020-04-30 84491cf3d72e2b9a9fd0b6e5c416006f405df357

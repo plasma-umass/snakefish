@@ -1,5 +1,5 @@
 from re import sub, findall
-from snakefish import Thread
+import snakefish
 
 output_file = open("bench_output-regexredux_sf.txt", mode="w")
 
@@ -25,25 +25,7 @@ def main():
           'agggt[cgt]aa|tt[acg]accct',
           'agggta[cgt]a|t[acg]taccct',
           'agggtaa[cgt]|[acg]ttaccct')
-
-    threads = []
-    for i, variant in enumerate(variants):
-        t = Thread(lambda: var_find(variant))
-        t.start()
-        threads.append((i, t))
-
-    results = [None for i in range(len(variants))]
-    while len(threads) != 0:
-        for i in range(len(threads)):
-            j, t = threads[i]
-            if t.try_join():
-                assert (t.get_exit_status() == 0)
-                results[j] = (t.get_result())
-                t.dispose()
-                threads.pop(i)
-                break
-
-    for f in zip(variants, results):
+    for f in zip(variants, snakefish.map(var_find, variants)):
         output_file.write("%s %s\n" % (f[0], f[1]))
 
     subst = {

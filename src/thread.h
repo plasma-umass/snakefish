@@ -44,9 +44,9 @@ public:
   thread &operator=(const thread &t) = delete;
 
   /**
-   * \brief No move constructor.
+   * \brief Default move constructor.
    */
-  thread(thread &&t) = delete;
+  thread(thread &&t) = default;
 
   /**
    * \brief No move assignment operator.

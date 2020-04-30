@@ -67,6 +67,10 @@ std::vector<py::object> map(const py::function &f, const py::iterable &args,
  *
  * \param args The arguments as a Python iterable.
  *
+ * \param extract See documentation for `thread`.
+ *
+ * \param merge See documentation for `thread`.
+ *
  * \param concurrency The level of concurrency. If not supplied, this is set
  * to the number of cores in the system.
  *
@@ -107,6 +111,10 @@ std::vector<py::object> starmap(const py::function &f, const py::iterable &args,
  * unpacking).
  *
  * \param args The arguments as a Python iterable.
+ *
+ * \param extract See documentation for `thread`.
+ *
+ * \param merge See documentation for `thread`.
  *
  * \param concurrency The level of concurrency. If not supplied, this is set
  * to the number of cores in the system.

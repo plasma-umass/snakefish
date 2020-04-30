@@ -32,7 +32,7 @@ results = snakefish.map(f1, args, extract, merge, concurrency=4, chunksize=7)  #
 print("map results are %s\n" % results)
 assert (results == list(map(f1, args)))
 
-print("calc_time is %s" % calc_time)
+print("calc_time is %s\n" % calc_time)
 
 args = [(i, i + 1) for i in range(50)]
 results = snakefish.starmap(f2, args)  # no merging, default concurrency & chunksize

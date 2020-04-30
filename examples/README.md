@@ -12,9 +12,10 @@
 - `fork_join.py`: Shows how to spawn a thread and join it (i.e. blocking join).
 - `fork_tryjoin.py`: Shows how to spawn a thread and try-join it (i.e. non-blocking join).
 - `generator.py`: Shows how to spawn a generator, how to get the generated values (blocking or non-blocking), and how to try-join it.
-- `generator_exception.py`: Show how to handle exceptions thrown by generators.
+- `generator_exception.py`: Shows how to handle exceptions thrown by generators.
+- `map.py`: Shows how to use `map()` and `starmap()`.
 - `thread_exception.py`: Shows how to handle exceptions thrown by threads.
 - `timestamp.py`: Shows how to timestamp messages to establish an ordering of events.
 
 ## Last Updated
-2020-03-30 42d7d07055d9f1803e129446470361b40f93240a
+2020-04-30 9f243fa3c88b955dbc5e3fb41e97937751b4e09e

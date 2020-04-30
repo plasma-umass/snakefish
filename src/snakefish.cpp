@@ -31,10 +31,18 @@ PYBIND11_MODULE(snakefish, m) {
 
   m.def("get_timestamp", &snakefish::get_timestamp);
   m.def("get_timestamp_serialized", &snakefish::get_timestamp_serialized);
+
   m.def("map", &snakefish::map, py::arg("f"), py::arg("args"),
         py::arg("concurrency") = 0, py::arg("chunksize") = 0);
+  m.def("map", &snakefish::map_merge, py::arg("f"), py::arg("args"),
+        py::arg("extract"), py::arg("merge"), py::arg("concurrency") = 0,
+        py::arg("chunksize") = 0);
+
   m.def("starmap", &snakefish::starmap, py::arg("f"), py::arg("args"),
         py::arg("concurrency") = 0, py::arg("chunksize") = 0);
+  m.def("starmap", &snakefish::starmap_merge, py::arg("f"), py::arg("args"),
+        py::arg("extract"), py::arg("merge"), py::arg("concurrency") = 0,
+        py::arg("chunksize") = 0);
 
   py::register_exception<std::runtime_error>(m, "RuntimeError");
 }

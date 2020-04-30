@@ -38,9 +38,10 @@ get_thread_func(const py::function &f, const std::vector<py::handle> &args,
   }
 }
 
-static std::vector<py::object> _map(const py::function &f,
-                                    const py::iterable &args, uint concurrency,
-                                    uint chunksize, bool star) {
+static std::vector<py::object>
+_map(const py::function &f, const py::iterable &args, py::function *extract,
+     py::function *merge, uint concurrency, uint chunksize, bool star) {
+
   py::list arg_list = py::list(args); // assemble args
 
   // use default concurrency (i.e. # of physical cores)?
@@ -86,9 +87,17 @@ static std::vector<py::object> _map(const py::function &f,
       }
 
       // spawn thread
-      thread t(get_thread_func(f, thread_args, star));
-      t.start();
-      threads.push_back(std::move(t));
+      if ((extract != nullptr) && (merge != nullptr)) {
+        // with merging
+        thread t(get_thread_func(f, thread_args, star), *extract, *merge);
+        t.start();
+        threads.push_back(std::move(t));
+      } else {
+        // without merging
+        thread t(get_thread_func(f, thread_args, star));
+        t.start();
+        threads.push_back(std::move(t));
+      }
 
       // reset
       thread_args.clear();
@@ -114,12 +123,26 @@ static std::vector<py::object> _map(const py::function &f,
 
 std::vector<py::object> map(const py::function &f, const py::iterable &args,
                             uint concurrency, uint chunksize) {
-  return _map(f, args, concurrency, chunksize, false);
+  return _map(f, args, nullptr, nullptr, concurrency, chunksize, false);
+}
+
+std::vector<py::object> map_merge(const py::function &f,
+                                  const py::iterable &args,
+                                  py::function extract, py::function merge,
+                                  uint concurrency, uint chunksize) {
+  return _map(f, args, &extract, &merge, concurrency, chunksize, false);
 }
 
 std::vector<py::object> starmap(const py::function &f, const py::iterable &args,
                                 uint concurrency, uint chunksize) {
-  return _map(f, args, concurrency, chunksize, true);
+  return _map(f, args, nullptr, nullptr, concurrency, chunksize, true);
+}
+
+std::vector<py::object> starmap_merge(const py::function &f,
+                                      const py::iterable &args,
+                                      py::function extract, py::function merge,
+                                      uint concurrency, uint chunksize) {
+  return _map(f, args, &extract, &merge, concurrency, chunksize, true);
 }
 
 } // namespace snakefish

@@ -43,7 +43,7 @@ inline uint64_t get_timestamp_serialized() {
 }
 
 /**
- * \brief `map(f, args)` executed in parallel.
+ * \brief `map(f, args)` executed in parallel, with no global variable merging.
  *
  * \param f The Python function that should be applied to each argument.
  *
@@ -61,7 +61,28 @@ std::vector<py::object> map(const py::function &f, const py::iterable &args,
                             uint concurrency = 0, uint chunksize = 0);
 
 /**
- * \brief `starmap(f, args)` executed in parallel.
+ * \brief `map(f, args)` executed in parallel, with global variable merging.
+ *
+ * \param f The Python function that should be applied to each argument.
+ *
+ * \param args The arguments as a Python iterable.
+ *
+ * \param concurrency The level of concurrency. If not supplied, this is set
+ * to the number of cores in the system.
+ *
+ * \param chunksize The size of each process' job. If not supplied, `args` are
+ * handed out evenly to each process.
+ *
+ * \return The return values as a `vector` (or a `list` in Python).
+ */
+std::vector<py::object> map_merge(const py::function &f,
+                                  const py::iterable &args,
+                                  py::function extract, py::function merge,
+                                  uint concurrency = 0, uint chunksize = 0);
+
+/**
+ * \brief `starmap(f, args)` executed in parallel, with no global variable
+ * merging.
  *
  * \param f The Python function that should be applied to each argument (after
  * unpacking).
@@ -78,6 +99,27 @@ std::vector<py::object> map(const py::function &f, const py::iterable &args,
  */
 std::vector<py::object> starmap(const py::function &f, const py::iterable &args,
                                 uint concurrency = 0, uint chunksize = 0);
+
+/**
+ * \brief `starmap(f, args)` executed in parallel, with global variable merging.
+ *
+ * \param f The Python function that should be applied to each argument (after
+ * unpacking).
+ *
+ * \param args The arguments as a Python iterable.
+ *
+ * \param concurrency The level of concurrency. If not supplied, this is set
+ * to the number of cores in the system.
+ *
+ * \param chunksize The size of each process' job. If not supplied, `args` are
+ * handed out evenly to each process.
+ *
+ * \return The return values as a `vector` (or a `list` in Python).
+ */
+std::vector<py::object> starmap_merge(const py::function &f,
+                                      const py::iterable &args,
+                                      py::function extract, py::function merge,
+                                      uint concurrency = 0, uint chunksize = 0);
 
 } // namespace snakefish
 

@@ -1,10 +1,63 @@
 import inspect
+import math
 import multiprocessing
+import os
 import traceback
 
 # this is needed for merging to work
 if multiprocessing.get_start_method(True) != 'fork':
     multiprocessing.set_start_method('fork')
+
+
+def map(f, args, extract=None, merge=None, concurrency=0, chunksize=0, star=False):
+    args = list(args)
+
+    # use default concurrency (i.e. # of physical cores)?
+    if concurrency == 0:
+        concurrency = os.cpu_count()
+
+    # use default chunk size?
+    if chunksize == 0:
+        chunksize = math.ceil(len(args) / concurrency)
+
+    # calculate # of batches
+    n_batch = math.ceil(len(args) / (concurrency * chunksize))
+
+    # run jobs
+    threads = []
+    results = []
+
+    for i in range(n_batch):
+        for j in range(concurrency):
+            # split args
+            start = (i * concurrency + j) * chunksize
+            thread_args = args[start:(start + chunksize)]
+
+            # if thread_args is empty, then args has been exhausted
+            if len(thread_args) == 0:
+                break
+
+            # spawn thread
+            if star:
+                t = Thread(target=lambda: [f(*arg) for arg in thread_args], extract=extract, merge=merge)
+            else:
+                t = Thread(target=lambda: [f(arg) for arg in thread_args], extract=extract, merge=merge)
+            t.start()
+            threads.append(t)
+
+        # join threads and get results
+        for t in threads:
+            t.join()
+            results.extend(t.get_result())
+
+        # reset
+        threads.clear()
+
+    return results
+
+
+def starmap(f, args, extract=None, merge=None, concurrency=0, chunksize=0):
+    return map(f, args, extract, merge, concurrency, chunksize, True)
 
 
 # wrapper around multiprocessing.Process to (mostly) align its behavior with snakefish.Thread

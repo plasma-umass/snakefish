@@ -38,10 +38,6 @@ def get_argchunks(i, d, chunksize=5000):
         yield chunk
 
 
-def thread_func(jobs):
-    return [make_check(j) for j in jobs]
-
-
 def main(n, min_depth=4):
 
     max_depth = max(min_depth + 2, n)

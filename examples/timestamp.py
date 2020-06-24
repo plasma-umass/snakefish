@@ -1,6 +1,5 @@
 import random
 import time
-from typing import *  # use type hints to make signatures clear
 
 import snakefish
 
@@ -42,20 +41,10 @@ def f3() -> None:
         print("thread #3: %s occurred before %s" % (received2[1], received1[1]))
 
 
-# the function that will extract shared global variables
-def extract(_globals_dict: Dict[str, Any]) -> Dict[str, Any]:
-    return {}  # no-op
-
-
-# the function that will merge shared global variables
-def merge(_old_globals: Dict[str, Any], _new_globals: Dict[str, Any]) -> None:
-    pass  # no-op
-
-
 # spawn 3 snakefish threads
-t1 = snakefish.Thread(f1, extract, merge)
-t2 = snakefish.Thread(f2, extract, merge)
-t3 = snakefish.Thread(f3, extract, merge)
+t1 = snakefish.Thread(f1)
+t2 = snakefish.Thread(f2)
+t3 = snakefish.Thread(f3)
 
 t1.start()
 t2.start()

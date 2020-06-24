@@ -1,18 +1,8 @@
-#include <x86intrin.h>
-
 #include "snakefish.h"
 
-static inline uint64_t get_timestamp() { return __rdtsc(); }
-
-static inline uint64_t get_timestamp_serialized() {
-  asm volatile("lfence" ::: "memory");
-  return __rdtsc();
-}
-
 PYBIND11_MODULE(snakefish, m) {
-  m.doc() = "true parallelism for python";
-
   py::class_<snakefish::thread>(m, "Thread")
+      .def(py::init<py::function>())
       .def(py::init<py::function, py::function, py::function>())
       .def("start", &snakefish::thread::start)
       .def("join", &snakefish::thread::join)
@@ -23,6 +13,7 @@ PYBIND11_MODULE(snakefish, m) {
       .def("dispose", &snakefish::thread::dispose);
 
   py::class_<snakefish::generator>(m, "Generator")
+      .def(py::init<py::function>())
       .def(py::init<py::function, py::function, py::function>())
       .def("start", &snakefish::generator::start)
       .def("next", &snakefish::generator::next)
@@ -38,8 +29,20 @@ PYBIND11_MODULE(snakefish, m) {
       .def("receive_pyobj", &snakefish::channel::receive_pyobj)
       .def("dispose", &snakefish::channel::dispose);
 
-  m.def("get_timestamp", &get_timestamp);
-  m.def("get_timestamp_serialized", &get_timestamp_serialized);
+  m.def("get_timestamp", &snakefish::get_timestamp);
+  m.def("get_timestamp_serialized", &snakefish::get_timestamp_serialized);
+
+  m.def("map", &snakefish::map, py::arg("f"), py::arg("args"),
+        py::arg("concurrency") = 0, py::arg("chunksize") = 0);
+  m.def("map", &snakefish::map_merge, py::arg("f"), py::arg("args"),
+        py::arg("extract"), py::arg("merge"), py::arg("concurrency") = 0,
+        py::arg("chunksize") = 0);
+
+  m.def("starmap", &snakefish::starmap, py::arg("f"), py::arg("args"),
+        py::arg("concurrency") = 0, py::arg("chunksize") = 0);
+  m.def("starmap", &snakefish::starmap_merge, py::arg("f"), py::arg("args"),
+        py::arg("extract"), py::arg("merge"), py::arg("concurrency") = 0,
+        py::arg("chunksize") = 0);
 
   py::register_exception<std::runtime_error>(m, "RuntimeError");
 }

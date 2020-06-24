@@ -6,6 +6,7 @@ library(tidyr)
 setwd("~/Downloads")
 
 # util
+# ref: https://stackoverflow.com/a/24338945
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
 
@@ -77,7 +78,7 @@ data_mac %>%
   unnest(times) ->
   run_times_mac
 
-# run times box plots
+# relative run times
 run_times_linux %>%
   group_by(program) %>%
   mutate(times = times / min(times)) %>%
@@ -88,7 +89,7 @@ run_times_linux %>%
   ylab("time (sec) / min time for this program across modules") +
   labs(title = "Linux") +
   coord_flip(ylim = c(1, 4.5)) ->
-  boxplot_linux
+  rel_time_boxplot_linux
 
 run_times_mac %>%
   group_by(program) %>%
@@ -100,47 +101,59 @@ run_times_mac %>%
   ylab("time (sec) / min time for this program across modules") +
   labs(title = "macOS") +
   coord_flip(ylim = c(1, 4.5)) ->
-  boxplot_mac
+  rel_time_boxplot_mac
 
-# run times bar plots
 run_times_linux %>%
-  ggplot(aes(x = program, y = times)) +
-  geom_col(aes(fill = module), position = "dodge2") +
+  group_by(program) %>%
+  mutate(times = times / min(times)) %>%
+  ungroup() %>%
+  filter(as.integer(program) != 2) %>% # filter dummy
+  ggplot(aes(x = module, y = times, fill = module)) +
+  geom_col(position = "dodge2") +
+  facet_wrap(vars(program)) +
+  ylab("time (sec) / min time for this program across modules") +
+  labs(title = "Linux") +
+  coord_flip(ylim = c(0, 4.5)) ->
+  rel_time_barplot_linux
+
+run_times_mac %>%
+  group_by(program) %>%
+  mutate(times = times / min(times)) %>%
+  ungroup() %>%
+  filter(as.integer(program) != 2) %>% # filter dummy
+  ggplot(aes(x = module, y = times, fill = module)) +
+  geom_col(position = "dodge2") +
+  facet_wrap(vars(program)) +
+  ylab("time (sec) / min time for this program across modules") +
+  labs(title = "macOS") +
+  coord_flip(ylim = c(0, 4.5)) ->
+  rel_time_barplot_mac
+
+# actual run times
+run_times_linux %>%
+  ggplot(aes(x = module, y = times, fill = module)) +
+  geom_col(position = "dodge2") +
+  facet_wrap(vars(program)) +
   ylab("time (sec)") +
   labs(title = "Linux") +
   coord_flip(ylim = c(0, 8)) ->
-  barplot_linux
+  time_barplot_linux
 
 run_times_mac %>%
-  ggplot(aes(x = program, y = times)) +
-  geom_col(aes(fill = module), position = "dodge2") +
+  ggplot(aes(x = module, y = times, fill = module)) +
+  geom_col(position = "dodge2") +
+  facet_wrap(vars(program)) +
   ylab("time (sec)") +
   labs(title = "macOS") +
   coord_flip(ylim = c(0, 8)) ->
-  barplot_mac
-
-run_times_linux %>%
-  ggplot(aes(x = program, y = log10(times))) +
-  geom_col(aes(fill = module), position = "dodge2") +
-  ylab("log10 of time (sec)") +
-  labs(title = "Linux") +
-  coord_flip(ylim = c(-2, 1)) ->
-  log_barplot_linux
-
-run_times_mac %>%
-  ggplot(aes(x = program, y = log10(times))) +
-  geom_col(aes(fill = module), position = "dodge2") +
-  ylab("log10 of time (sec)") +
-  labs(title = "macOS") +
-  coord_flip(ylim = c(-2, 1)) ->
-  log_barplot_mac
+  time_barplot_mac
 
 # make plots
-multiplot(boxplot_linux, boxplot_mac)
-multiplot(barplot_linux, barplot_mac)
-multiplot(log_barplot_linux, log_barplot_mac)
+multiplot(rel_time_boxplot_linux, rel_time_boxplot_mac)
+multiplot(rel_time_barplot_linux, rel_time_barplot_mac)
+multiplot(time_barplot_linux, time_barplot_mac)
 
-# ANOVA
+# ANOVA (multiprocessing v.s. snakefish)
 run_times_linux %>%
   filter(as.integer(module) %in% c(2, 4)) ->
   tmp_linux
@@ -148,6 +161,9 @@ run_times_linux %>%
 run_times_mac %>%
   filter(as.integer(module) %in% c(2, 4)) ->
   tmp_mac
+
+summary(tmp_linux)
+summary(tmp_mac)
 
 summary(aov(times ~ module, data = tmp_linux))
 summary(aov(times ~ module + program, data = tmp_linux))

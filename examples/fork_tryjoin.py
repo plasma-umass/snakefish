@@ -11,18 +11,8 @@ def f() -> List[int]:
     return [i for i in range(200)]  # return a large list
 
 
-# the function that will extract shared global variables
-def extract(_globals_dict: Dict[str, Any]) -> Dict[str, Any]:
-    return {}  # no-op
-
-
-# the function that will merge shared global variables
-def merge(_old_globals: Dict[str, Any], _new_globals: Dict[str, Any]) -> None:
-    pass  # no-op
-
-
 # spawn a snakefish thread
-t = snakefish.Thread(f, extract, merge)
+t = snakefish.Thread(f)
 t.start()
 
 # try to join the thread and time it

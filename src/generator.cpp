@@ -2,12 +2,28 @@
 
 namespace snakefish {
 
+generator::generator(const py::function &f)
+    : is_parent(false), child_pid(0), started(false), joined(false),
+      child_status(0), extract_func(), merge_func(), _channel(),
+      cmd_channel(1024), next_sent(false), stop_sent(false), merging(false) {
+
+  py::object is_gen_func =
+      py::module::import("inspect").attr("isgeneratorfunction");
+
+  if (is_gen_func(f).equal(py::bool_(true)))
+    gen = f();
+  else
+    throw std::runtime_error("f is not a generator function");
+
+  _next = py::getattr(gen, "__next__");
+}
+
 generator::generator(const py::function &f, py::function extract,
                      py::function merge)
     : is_parent(false), child_pid(0), started(false), joined(false),
       child_status(0), extract_func(std::move(extract)),
       merge_func(std::move(merge)), _channel(), cmd_channel(1024),
-      next_sent(false), stop_sent(false) {
+      next_sent(false), stop_sent(false), merging(true) {
 
   py::object is_gen_func =
       py::module::import("inspect").attr("isgeneratorfunction");
@@ -88,8 +104,10 @@ void generator::join() {
     abort();
   } else {
     joined = true;
-    globals = _channel.receive_pyobj(true);
-    merge_func(py::globals(), globals);
+    if (merging) {
+      globals = _channel.receive_pyobj(true);
+      merge_func(py::globals(), globals);
+    }
   }
 }
 
@@ -118,8 +136,10 @@ bool generator::try_join() {
     abort();
   } else {
     joined = true;
-    globals = _channel.receive_pyobj(true);
-    merge_func(py::globals(), globals);
+    if (merging) {
+      globals = _channel.receive_pyobj(true);
+      merge_func(py::globals(), globals);
+    }
     return true;
   }
 }
@@ -182,8 +202,10 @@ void generator::run() {
     }
   }
 
-  globals = extract_func(py::globals());
-  _channel.send_pyobj(globals);
+  if (merging) {
+    globals = extract_func(py::globals());
+    _channel.send_pyobj(globals);
+  }
   std::exit(0);
 }
 

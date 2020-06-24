@@ -1,16 +1,7 @@
+from itertools import repeat
 from math import sqrt
-from snakefish import Thread
 from sys import argv
-import os
-import math
-
-
-def extract(_globals_dict):
-    return {}
-
-
-def merge(_old_globals, _new_globals):
-    pass
+import snakefish
 
 
 def eval_A(i, j):
@@ -32,48 +23,17 @@ def At_sum(u, i):
     return x
 
 
-def thread_func(f, u, r):
-    return [f(u, i) for i in r]
-
-
 def multiply_AtAv(u):
     r = range(len(u))
 
-    threads = []
-    jobs_per_thread = math.ceil(len(u) / os.cpu_count())
-    for i in range(0, len(u), jobs_per_thread):
-        r_slice = r[i:(i+jobs_per_thread)]
-        t = Thread(lambda: thread_func(A_sum, u, r_slice), extract, merge)
-        t.start()
-        threads.append(t)
-
-    tmp = []
-    while len(threads) != 0:
-        for i in range(len(threads)):
-            if threads[i].try_join():
-                assert (threads[i].get_exit_status() == 0)
-                tmp.extend(threads[i].get_result())
-                threads[i].dispose()
-                threads.pop(i)
-                break
-
-    for i in range(0, len(u), jobs_per_thread):
-        r_slice = r[i:(i+jobs_per_thread)]
-        t = Thread(lambda: thread_func(At_sum, tmp, r_slice), extract, merge)
-        t.start()
-        threads.append(t)
-
-    results = []
-    while len(threads) != 0:
-        for i in range(len(threads)):
-            if threads[i].try_join():
-                assert (threads[i].get_exit_status() == 0)
-                results.extend(threads[i].get_result())
-                threads[i].dispose()
-                threads.pop(i)
-                break
-
-    return results
+    tmp = snakefish.starmap(
+        A_sum,
+        zip(repeat(u), r)
+    )
+    return snakefish.starmap(
+        At_sum,
+        zip(repeat(tmp), r)
+    )
 
 
 def main(n):

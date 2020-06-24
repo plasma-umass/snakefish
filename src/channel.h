@@ -36,7 +36,12 @@ const size_t DEFAULT_CHANNEL_SIZE = 2l * 1024l * 1024l * 1024l; // 2 GiB
 /**
  * \brief An IPC channel with built-in synchronization support.
  *
- * *IMPORTANT*: The `dispose()` function must be called when a channel is no
+ * All messages are exchanged through the same buffer, so the communication is
+ * not multiplexed. As such, `channel` should only be used for uni-directional
+ * communication in most cases. Having multiple senders and/or multiple
+ * receivers may or may not work, depending on the use cases.
+ *
+ * **IMPORTANT**: The `dispose()` function must be called when a channel is no
  * longer needed to release resources.
  *
  * Characteristics of the functions:
@@ -105,7 +110,7 @@ public:
   void send_bytes(void *bytes, size_t len);
 
   /**
-   * \brief Send a python object.
+   * \brief Send a Python object.
    *
    * This function will serialize `obj` using `pickle` and send the binary
    * output.
@@ -132,7 +137,7 @@ public:
   buffer receive_bytes(bool block);
 
   /**
-   * \brief Receive a python object.
+   * \brief Receive a Python object.
    *
    * This function will receive some bytes and deserialize them using `pickle`.
    *
@@ -178,7 +183,7 @@ protected:
   std::atomic_bool *full;
 
   /**
-   * \brief Number of unread messages.
+   * \brief A semaphore representing the number of unread messages.
    */
   semaphore_t n_unread;
 

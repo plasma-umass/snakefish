@@ -13,14 +13,14 @@ def f1() -> None:
         print("thread #1: sleep for 100 ms")
         time.sleep(0.1)
 
-    ts = time.perf_counter()
+    ts = time.perf_counter_ns()
     print("thread #1: sending an event...")
     channel.put((ts, "explosion"))
 
 
 # a function that will be executed on a thread
 def f2() -> None:
-    ts = time.perf_counter()
+    ts = time.perf_counter_ns()
     print("thread #2: sending an event...")
     channel.put((ts, "implosion"))
 

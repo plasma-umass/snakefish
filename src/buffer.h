@@ -10,12 +10,12 @@
 namespace snakefish {
 
 /**
- * \brief An enum describing how the `buffer` was allocated.
+ * \brief An enum indicating the allocation function of `buffer`.
  */
 enum buffer_type { MALLOC, MMAP };
 
 /**
- * \brief A wrapper around dynamically allocated memory buffers.
+ * \brief A wrapper around dynamically allocated memory.
  *
  * This makes memory management easier.
  */
@@ -54,6 +54,8 @@ public:
    *
    * If type is `MMAP`, the underlying memory buffer will be allocated using
    * `mmap()` with `PROT_READ | PROT_WRITE` and `MAP_PRIVATE | MAP_ANONYMOUS`.
+   *
+   * \throws std::bad_alloc If `malloc()` or `mmap()` failed.
    */
   buffer(size_t len, buffer_type type);
 
@@ -63,17 +65,17 @@ public:
   ~buffer();
 
   /**
-   * \brief Return a pointer to the start of the underlying memory buffer.
+   * \brief Get a pointer to the start of the underlying memory buffer.
    */
   void *get_ptr() { return buf; }
 
   /**
-   * \brief Return the length of the underlying memory buffer.
+   * \brief Get the length (in bytes) of the underlying memory buffer.
    */
   size_t get_len() { return len; }
 
   /**
-   * \brief Return the type of the underlying memory buffer.
+   * \brief Get the type of the underlying memory buffer.
    */
   buffer_type get_type() { return type; }
 

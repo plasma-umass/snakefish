@@ -1,14 +1,8 @@
 from sys import argv
 from math import factorial
 from multiprocessing import cpu_count
-from snakefish import Thread
-from itertools import islice
-
-def extract(_globals_dict):
-    return {}
-
-def merge(_old_globals, _new_globals):
-    pass
+from itertools import islice, starmap
+import snakefish
 
 def permutations(n, start, size):
     p = bytearray(range(n))
@@ -94,22 +88,10 @@ def fannkuch(n):
 
         task_args = [(n, i * task_size, task_size) for i in range(task_count)]
 
-        threads = []
-        for i in range(task_count):
-            t = Thread(lambda: task(*task_args[i]), extract, merge)
-            t.start()
-            threads.append(t)
-
-        results = []
-        while len(threads) != 0:
-            for i in range(len(threads)):
-                if threads[i].try_join():
-                    assert (threads[i].get_exit_status() == 0)
-                    results.append(threads[i].get_result())
-                    threads[i].dispose()
-                    threads.pop(i)
-                    break
-        checksums, maximums = zip(*results)
+        if task_count > 1:
+            checksums, maximums = zip(*snakefish.starmap(task, task_args))
+        else:
+            checksums, maximums = zip(*starmap(task, task_args))
 
         checksum, maximum = sum(checksums), max(maximums)
         print("{0}\nPfannkuchen({1}) = {2}".format(checksum, n, maximum))

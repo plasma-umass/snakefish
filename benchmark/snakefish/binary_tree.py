@@ -1,15 +1,5 @@
 import sys
-import math
-from snakefish import Thread
-from os import cpu_count
-
-
-def extract(_globals_dict):
-    return {}
-
-
-def merge(_old_globals, _new_globals):
-    pass
+import snakefish
 
 
 def make_tree(d):
@@ -48,10 +38,6 @@ def get_argchunks(i, d, chunksize=5000):
         yield chunk
 
 
-def thread_func(jobs):
-    return [make_check(j) for j in jobs]
-
-
 def main(n, min_depth=4):
 
     max_depth = max(min_depth + 2, n)
@@ -68,26 +54,7 @@ def main(n, min_depth=4):
         cs = 0
 
         for argchunk in get_argchunks(i,d):
-            jobs_per_thread = math.ceil(len(argchunk) / cpu_count())
-            threads = []
-            for k in range(0, len(argchunk), jobs_per_thread):
-                jobs = argchunk[k:(k+jobs_per_thread)]
-                t = Thread(lambda: thread_func(jobs), extract, merge)
-                t.start()
-                threads.append(t)
-
-            results = []
-            while len(threads) != 0:
-                for k in range(len(threads)):
-                    if threads[k].try_join():
-                        assert (threads[k].get_exit_status() == 0)
-                        results.extend(threads[k].get_result())
-                        threads[k].dispose()
-                        threads.pop(k)
-                        break
-
-            cs += sum(results)
-
+            cs += sum(snakefish.map(make_check, argchunk))
         print('{0}\t trees of depth {1}\t check: {2}'.format(i, d, cs))
 
     print('long lived tree of depth {0}\t check: {1}'.format(

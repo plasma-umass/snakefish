@@ -10,19 +10,13 @@ from sys import argv, stdout
 output_file = open("bench_output-fasta_sf.txt", mode="wb", buffering=0)
 write = output_file.write
 
-def extract(_globals_dict):
-    return {}
-
-def merge(_old_globals, _new_globals):
-    pass
-
 def acquired_lock():
     lock = Lock()
     lock.acquire()
     return lock
 
 def started_process(target, args):
-    process = Thread(lambda: target(*args), extract, merge)
+    process = Thread(lambda: target(*args))
     process.start()
     return process
 

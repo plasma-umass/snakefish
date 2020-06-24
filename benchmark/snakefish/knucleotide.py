@@ -1,15 +1,9 @@
 from os import cpu_count
 from collections import defaultdict
 from itertools import starmap, chain
-from snakefish import Thread
+import snakefish
 
 lean_buffer = {}
-
-def extract(_globals_dict):
-    return {}
-
-def merge(_old_globals, _new_globals):
-    pass
 
 def lean_args(sequence, reading_frames, i, j):
     global lean_buffer
@@ -170,23 +164,12 @@ def main():
         (sequence, reading_frames, partitions[i], partitions[i + 1])
             for i in range(len(partitions) - 1)]
 
-    lean_jobs = list(starmap(lean_args, count_jobs))
-    threads = []
-    for job in lean_jobs:
-        t = Thread(lambda: lean_call(count_frequencies)(*job), extract, merge)
-        t.start()
-        threads.append(t)
-
-    results = []
-    while len(threads) != 0:
-        for k in range(len(threads)):
-            if threads[k].try_join():
-                assert (threads[k].get_exit_status() == 0)
-                results.extend(threads[k].get_result())
-                threads[k].dispose()
-                threads.pop(k)
-                break
-    results = list(chain(iter(results)))
+    if n == 1:
+        results = list(chain(*starmap(count_frequencies, count_jobs)))
+    else:
+        lean_jobs = list(starmap(lean_args, count_jobs))
+        results = snakefish.starmap(lean_call(count_frequencies), lean_jobs)
+        results = list(chain(*results))
 
     with open("bench_output-knucleotide_sf.txt", mode="w") as f:
         display(f, results, display_list(mono_nucleotides), relative=True, sort=True)
